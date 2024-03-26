@@ -1,0 +1,67 @@
+
+
+#clockContainer {
+    position: relative;
+    margin: auto;
+    height: 40vw;
+    width: 40vw;
+    background: url(c6.png) no-repeat;
+    /*setting our background image*/
+    background-size: 100%;
+}
+
+#date {
+    position: absolute;
+    background: transparent;
+    border-radius: 10px;
+    transform-origin: bottom;
+    z-index: 1; /* Set a higher z-index to ensure the clock hands are always in front */
+}
+
+#hour,
+#minute,
+#second {
+    position: absolute;
+    background: rgb(201, 195, 195); /* Change the background color to silver */
+    border-radius: 10px;
+    transform-origin: center bottom;
+    z-index: 1; /* Set a higher z-index to ensure the clock hands are always in front */
+}
+
+
+#hour {
+    width: 1.8%;
+    height: 25%;
+    top: 25%;
+    left: 48.85%;
+    opacity: 0.8;
+}
+
+#minute {
+    width: 1.6%;
+    height: 30%;
+    top: 19%;
+    left: 48.9%;
+    opacity: 0.8;
+}
+
+
+#second {
+    width: 1%;
+    height: 40%;
+    top: 9%;
+    left: 49.25%;
+    opacity: 0.8;
+}
+
+#date {
+    font-family: "Helvetica Neue";
+    font-size: 1.8vw;
+    font-weight: bold;
+    color: black; /* Set the text color to black */
+    background-color: transparent; /* Set the background color with an alpha value for transparency */
+    padding : 3px; /* Add padding for better readability */
+    top: 46.5%; /* Adjust the position vertically */
+    right: 19.5%; /* Adjust the position horizontally */
+    z-index: 0; /* Set a lower z-index to push the date div to the back */
+}
