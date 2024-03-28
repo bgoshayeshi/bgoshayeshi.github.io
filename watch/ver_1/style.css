@@ -53,12 +53,12 @@
 
 #date {
     font-family: "Helvetica Neue";
-    font-size: 1.8vw;
+    font-size: 6vw;
     font-weight: bold;
     color: black; /* Set the text color to black */
     background-color: transparent; /* Set the background color with an alpha value for transparency */
     padding: 3px; /* Add padding for better readability */
-    top: 46.5%; /* Adjust the position vertically */
-    right: 19.5%; /* Adjust the position horizontally */
+    top: 46%; /* Adjust the position vertically */
+    right: 19%; /* Adjust the position horizontally */
     z-index: 0; /* Set a lower z-index to push the date div to the back */
 }
