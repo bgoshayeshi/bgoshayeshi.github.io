@@ -59,6 +59,6 @@
     background-color: transparent; /* Set the background color with an alpha value for transparency */
     padding: 3px; /* Add padding for better readability */
     top: 46%; /* Adjust the position vertically */
-    right: 19%; /* Adjust the position horizontally */
+    right: 18%; /* Adjust the position horizontally */
     z-index: 0; /* Set a lower z-index to push the date div to the back */
 }
