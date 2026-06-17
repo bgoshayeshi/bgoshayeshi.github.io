@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One-Dimensional Turbulence Model, Babak Goshayeshi</title>
+<style>
+  /* ---- Faithful HTML reproduction of BabakGoshayeshi_Final.key (Keynote) ----
+     Original slide canvas: 1920 x 1080, "Black" theme.
+     All elements are positioned in original slide pixel coordinates inside
+     #stage, which is then scaled to fit the browser window. */
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+
+  #viewport {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+  }
+
+  #stage {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    background: #000;
+    transform-origin: center center;
+    overflow: hidden;
+  }
+
+  .el { position: absolute; }
+  .el img, .el video { width: 100%; height: 100%; display: block; }
+
+  /* Title - Copperplate Gothic Bold, light silver, small-caps */
+  #title {
+    left: 330.78px; top: -1.5px; width: 1224.44px; height: 75px;
+    display: flex; align-items: center; justify-content: center;
+    color: #d8d8d8;
+    font-family: "Copperplate", "Copperplate Gothic Bold", "Trajan Pro", Georgia, serif;
+    font-weight: 700;
+    font-variant: small-caps;
+    font-size: 60px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+  }
+
+  /* Section labels */
+  .label {
+    display: flex; align-items: center;
+    color: #ededed;
+    font-family: "Copperplate", "Copperplate Gothic Bold", Georgia, serif;
+    font-weight: 700;
+    font-variant: small-caps;
+    font-size: 46px;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+  }
+  #lbl-gas   { left: 66.31px;   top: 91.5px; width: 275.27px; height: 71px; }
+  #lbl-coal  { left: 1532.77px; top: 91.5px; width: 322.47px; height: 71px; justify-content: flex-end; }
+
+  /* Top-left brand (replaces ICSE logo) */
+  #brand {
+    display: flex; flex-direction: column; justify-content: center;
+    padding-left: 12px; color: #ededed;
+    font-family: Georgia, serif; line-height: 1.2;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+  }
+  #brand span { font-size: 22px; font-weight: 700; }
+  #brand a { font-size: 14px; color: #cfcfcf; text-decoration: none; }
+  #brand a:hover { text-decoration: underline; }
+
+  /* Decorative red arrows under the title */
+  #arrows {
+    position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+  <a href="/" style="position:fixed;top:18px;left:20px;z-index:9999;font-family:Inter,system-ui,sans-serif;font-size:13px;color:#eaeaea;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:7px 14px;text-decoration:none;backdrop-filter:blur(6px)">← Babak Goshayeshi</a>
+  <div id="viewport">
+    <div id="stage">
+
+      <!-- Center: "CO Excalibur" CO-concentration visualization (Brief2.pdf) -->
+      <!-- Box starts at the title's bottom (y=73.5) and runs to the slide bottom (y=1080);
+           object-fit:contain scales the tall image down so all of it is visible, top-aligned. -->
+      <div class="el" style="left:578.60px; top:73.5px; width:755.01px; height:1006.5px;">
+        <img src="assets/Brief2.png" alt="CO Excalibur: carbon monoxide concentration visualization with brief"
+             style="object-fit: contain; object-position: center top;">
+      </div>
+
+      <!-- Left: gas-phase governing equations (droppedImage-10.pdf) -->
+      <div class="el" style="left:49px; top:219px; width:539px; height:350.01px;">
+        <img src="assets/droppedImage-10.png" alt="Gas-phase conservation equations">
+      </div>
+
+      <!-- Right: coal particle schematic (coalparticle2i-1.tiff) -->
+      <div class="el" style="left:1424px; top:190.50px; width:416.11px; height:394px;">
+        <img src="assets/coalparticle2i-1.png" alt="Coal particle: char oxidation, devolatilization, evaporation">
+      </div>
+
+      <!-- Bottom-left: velocity profile movie (Vel2.mov) -->
+      <div class="el" style="left:6px; top:612px; width:582px; height:436.5px;">
+        <video src="assets/Vel2.webm" poster="assets/Vel2.png"
+               autoplay loop muted playsinline></video>
+      </div>
+
+      <!-- Bottom-right: temperature profile movie (Temp2.mov) -->
+      <div class="el" style="left:1335px; top:612px; width:596px; height:447px;">
+        <video src="assets/Temp2.webm" poster="assets/Temp2.png"
+               autoplay loop muted playsinline></video>
+      </div>
+
+      <!-- Top-left: name + website (replaces the ICSE logo) -->
+      <div class="el" id="brand" style="left:0px; top:-0.71px; height:43px;">
+        <span>Babak Goshayeshi</span>
+        <a href="http://www.bgoshayeshi.com" target="_blank" rel="noopener">WWW.bgoshayeshi.com</a>
+      </div>
+
+      <!-- Title -->
+      <div class="el" id="title">One-Dimensional Turbulence Model</div>
+
+      <!-- Section labels -->
+      <div class="el label" id="lbl-gas">Gas Phase</div>
+      <div class="el label" id="lbl-coal">Coal Particle</div>
+
+      
+
+    </div>
+  </div>
+
+  <script>
+    // Scale the fixed 1920x1080 stage to fit the window, preserving aspect ratio.
+    (function () {
+      var stage = document.getElementById('stage');
+      function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'scale(' + s + ')';
+      }
+      window.addEventListener('resize', fit);
+      fit();
+    })();
+  </script>
+</body>
+</html>
