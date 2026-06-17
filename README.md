@@ -15,7 +15,8 @@ clay/terracotta accent, editorial serif (Fraunces) + clean sans (Inter).
 ├── script.js                          # Nav, mobile menu, scroll-reveal (progressive enhancement)
 ├── assets/
 │   ├── temperature-hero.mp4           # Combustion-chamber CFD loop (hero, 900px, muted, ~8 MB)
-│   └── logos/                         # DiPhyx & dxflow logos (Ventures section)
+│   ├── logos/                         # DiPhyx & dxflow logos (Ventures section)
+│   └── compute-viz/                   # Animated HPC→pipelines visualization (iframed into About)
 └── projects/
     ├── odt/                           # Ph.D. work: Two-Phase One-Dimensional Turbulence model (linked from Work)
     └── computational-science/         # Animated computational-pipelines visualization (currently unlinked)
