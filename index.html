@@ -52,7 +52,7 @@
 
     <!-- ========================================================== HERO -->
     <section class="hero">
-      <div class="wrap hero__grid">
+      <div class="wrap">
         <div class="hero__text reveal">
           <p class="eyebrow">Scientific Computing &amp; AI Platform Leader</p>
           <h1>A physics-trained leader who turns complex simulations, AI, and data pipelines into <em>enterprise-grade</em> solutions.</h1>
@@ -73,14 +73,12 @@
           </div>
         </div>
 
-        <figure class="media reveal" style="margin:0">
-          <video src="assets/temperature-hero.mp4" autoplay muted loop playsinline
-                 poster="projects/odt/assets/Temp2.png"></video>
-          <div class="media__glow"></div>
-          <figcaption class="media__cap">
-            <span class="live">Live</span>
-            Temperature field in the combustion chamber of a coal-fired power-plant furnace
-          </figcaption>
+        <!-- Computational pipelines: HPC clusters (left) feeding scientific applications (right) -->
+        <figure class="compute-figure compute-figure--hero reveal">
+          <iframe class="compute-figure__frame"
+                  src="assets/compute-viz/index.html"
+                  title="Computational pipelines: HPC clusters (CPU, GPU, TPU, FPGA) feeding genomics, molecular dynamics, machine learning, and CFD and combustion"
+                  loading="lazy" scrolling="no"></iframe>
         </figure>
       </div>
 
@@ -127,14 +125,6 @@
             </p>
           </div>
         </div>
-
-        <!-- Computational pipelines: HPC clusters (left) feeding scientific applications (right) -->
-        <figure class="compute-figure reveal">
-          <iframe class="compute-figure__frame"
-                  src="assets/compute-viz/index.html"
-                  title="Computational pipelines: HPC clusters (CPU, GPU, TPU, FPGA) feeding genomics, molecular dynamics, machine learning, and CFD and combustion"
-                  loading="lazy" scrolling="no"></iframe>
-        </figure>
       </div>
     </section>
 
