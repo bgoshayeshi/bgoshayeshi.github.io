@@ -52,14 +52,25 @@
 
     <!-- ========================================================== HERO -->
     <section class="hero">
-      <div class="wrap">
-        <div class="hero__text reveal">
+      <div class="wrap hero__grid">
+        <div class="hero__head reveal">
           <p class="eyebrow">Scientific Computing, AI Platform, and R&amp;D Data Leader</p>
           <h1>A physics-trained leader who turns complex computational workflows, AI, and data pipelines into <em>enterprise-grade</em> solutions.</h1>
+        </div>
+
+        <!-- Computational-sciences flow: one HPC cluster (top) feeding genomics,
+             Bioinformatics, machine learning & AI, and CFD & CAE (bottom). -->
+        <figure class="hero__viz reveal">
+          <iframe class="hero__viz-frame"
+                  src="assets/compute-viz/index.html"
+                  title="One HPC cluster feeding genomics, Bioinformatics, machine learning and AI, and CFD and CAE"
+                  loading="lazy" scrolling="no"></iframe>
+        </figure>
+
+        <div class="hero__body reveal">
           <p class="hero__sub">
-            I build and lead platforms that connect scientific computing, AI, data engineering, HPC,
-            and cloud infrastructure. My work spans R&amp;D data systems, computational pipelines,
-            GPU-enabled workflows, AI-assisted automation, and founder-led product execution.
+            I help R&amp;D and engineering teams modernize how they run, scale, and automate
+            computational work.
           </p>
           <div class="hero__actions">
             <a class="btn btn--clay" href="#work">View work <span class="arrow">→</span></a>
@@ -72,14 +83,6 @@
             <span><span class="dot"></span> Founder of DiPhyx</span>
           </div>
         </div>
-
-        <!-- Computational pipelines: HPC clusters (left) feeding scientific applications (right) -->
-        <figure class="compute-figure compute-figure--hero reveal">
-          <iframe class="compute-figure__frame"
-                  src="assets/compute-viz/index.html"
-                  title="Computational pipelines: HPC clusters feeding genomics, molecular dynamics, machine learning, engineering simulation, and scientific AI workflows"
-                  loading="lazy" scrolling="no"></iframe>
-        </figure>
       </div>
 
       <!-- secondary tagline + affiliations -->
@@ -112,7 +115,7 @@
               expertise in computational modeling, high-performance computing, GPU acceleration, AI,
               cloud infrastructure, and enterprise data platforms. My career sits at the intersection of
               science, software, and product strategy: I have built simulation tools, machine-learning
-              workflows, data pipelines, scientific platforms, and AI-assisted products for complex R&amp;D
+              workflows, data pipelines, scientific platforms, and AI-enhanced products for complex R&amp;D
               environments.
             </p>
           </div>
@@ -164,11 +167,15 @@
     <!-- ====================================================== VENTURES -->
     <section id="ventures" class="ventures">
       <div class="wrap">
-        <div class="section__head reveal">
-          <p class="eyebrow">Platforms</p>
-          <h2>DiPhyx &amp; dxflow.</h2>
-          <p>As founder of DiPhyx, I am building the platform and workflow engine that make computational
-             pipelines easier to design, run, monitor, and reproduce across cloud, HPC, and AI infrastructure.</p>
+        <div class="ventures__intro reveal">
+          <img class="ventures__logo" src="assets/logos/diphyx_logo.svg"
+               alt="DiPhyx" width="55" height="110" />
+          <div class="section__head">
+            <p class="eyebrow">Platforms</p>
+            <h2>DiPhyx &amp; dxflow.</h2>
+            <p>As founder of DiPhyx, I am building the platform and workflow engine that make computational
+               pipelines easier to design, run, monitor, and reproduce across cloud, HPC, and AI infrastructure.</p>
+          </div>
         </div>
 
         <div class="ventures__grid">
@@ -235,10 +242,18 @@
     <!-- ========================================================== WORK -->
     <section id="work" class="work">
       <div class="wrap">
-        <div class="section__head reveal">
-          <p class="eyebrow">Selected work</p>
-          <h2>Scientific computing across research, data, and platforms.</h2>
-          <p>Representative work across computational science, AI-enabled data pipelines, platform architecture, and enterprise R&amp;D technology.</p>
+        <div class="work__intro reveal">
+          <figure class="work__media">
+            <video class="work__video" autoplay muted loop playsinline preload="metadata"
+                   aria-label="Temperature field simulation">
+              <source src="assets/temperature-hero.mp4" type="video/mp4" />
+            </video>
+          </figure>
+          <div class="section__head">
+            <p class="eyebrow">Selected work</p>
+            <h2>Scientific computing across research, data, and platforms.</h2>
+            <p>Representative work across computational science, AI-enhanced data pipelines, platform architecture, and enterprise R&amp;D technology.</p>
+          </div>
         </div>
 
         <div class="projects">
@@ -314,7 +329,7 @@
             <div class="tl__role"><h3>Chief Technology Officer</h3><span class="tl__org">DiPhyx Inc.</span></div>
             <p class="tl__when">Present</p>
             <ul>
-              <li>Built AI-assisted scientific computing products: dxflow, DiPhyx Platform, and DiPhyx Studio.</li>
+              <li>Built AI-enhanced scientific computing products: dxflow, DiPhyx Platform, and DiPhyx Studio.</li>
               <li>Led product strategy, platform architecture, design partners, and engineering execution.</li>
               <li>Focused on computational pipelines, cloud and HPC execution, reproducibility, product packaging, and executive communication.</li>
             </ul>
