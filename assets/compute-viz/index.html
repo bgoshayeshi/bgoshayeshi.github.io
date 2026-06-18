@@ -3,145 +3,132 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Computational pipelines</title>
+  <title>Computational sciences</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Name/title intentionally omitted: this is embedded as a figure in the About section. -->
-  <section class="hero" aria-label="Computational pipelines: HPC clusters feeding genomics, molecular dynamics, machine learning, and CFD and combustion">
-    <div class="hero-inner">
-      <div class="pipeline">
-        <!-- HPC rack: shared compute source for all 4 lanes -->
-        <div class="hpc-rack">
-          <div class="rack-bezel">
-            <div class="rack-head">
-              <span class="rack-led on"></span>
-              <span class="rack-title">HPC<br>CLUSTER</span>
-              <span class="rack-led on alt"></span>
-            </div>
-            <div class="rack-body">
-              <div class="blade" data-unit="CPU">
-                <span class="blade-chip cpu">CPU</span>
-                <span class="blade-vent"></span>
-                <span class="blade-leds"><i></i><i></i><i></i></span>
-                <span class="blade-port"></span>
-              </div>
-              <div class="blade" data-unit="GPU">
-                <span class="blade-chip gpu">GPU</span>
-                <span class="blade-vent"></span>
-                <span class="blade-leds"><i></i><i></i><i></i></span>
-                <span class="blade-port"></span>
-              </div>
-              <div class="blade" data-unit="TPU">
-                <span class="blade-chip tpu">TPU</span>
-                <span class="blade-vent"></span>
-                <span class="blade-leds"><i></i><i></i><i></i></span>
-                <span class="blade-port"></span>
-              </div>
-              <div class="blade" data-unit="FPGA">
-                <span class="blade-chip fpga">FPGA</span>
-                <span class="blade-vent"></span>
-                <span class="blade-leds"><i></i><i></i><i></i></span>
-                <span class="blade-port"></span>
-              </div>
-            </div>
-            <div class="rack-foot">
-              <span class="rack-meter"><i></i></span>
-              <span class="rack-mark">x86 · CUDA · ROCm · MPI</span>
-            </div>
-          </div>
-        </div>
+  <!-- Vertical flow: one HPC server (top) feeds four scientific domains (bottom).
+       Embedded as a decorative hero backdrop — no name/title here. -->
+  <section class="viz" aria-label="One HPC cluster feeding genomics, molecular design, machine learning and AI, and CFD and CAE">
+    <div class="stack">
 
-        <!-- Lane 1: Genomics -->
-        <div class="lane" data-lane="1">
-          <div class="wire"></div>
-          <div class="output output-dna">
+      <!-- === Server: a single unit that enumerates the compute types === -->
+      <div class="server">
+        <div class="server__bar">
+          <span class="led on"></span>
+          <span class="server__name">HPC&nbsp;CLUSTER</span>
+          <span class="led on alt"></span>
+        </div>
+        <div class="server__chips">
+          <span class="chip" data-k="cpu">CPU</span>
+          <span class="chip" data-k="gpu">GPU</span>
+          <span class="chip" data-k="tpu">TPU</span>
+          <span class="chip" data-k="fpga">FPGA</span>
+        </div>
+        <div class="server__mark">x86 · CUDA · ROCm · MPI</div>
+      </div>
+
+      <!-- === Sciences: vertical zigzag, each fed by its own wire === -->
+      <div class="sciences">
+
+        <!-- Connectors: four separate wires, one source per science on the HPC box,
+             each landing on the top of its science box. Fixed px coordinate space
+             (viewBox matches .sciences box) so wires meet the box tops exactly. -->
+        <svg class="links" viewBox="0 0 330 440" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <!-- Source order on the HPC box, left → right: MD, CFD, ML, Genomics -->
+          <g class="links__base">
+            <path id="wmd"  d="M138,8 C138,72 78,106  78,136" />
+            <path id="wcfd" d="M156,8 C156,168 78,298  78,328" />
+            <path id="wml"  d="M174,8 C174,120 252,202 252,232" />
+            <path id="wgen" d="M192,8 C192,24 252,10  252,40" />
+          </g>
+          <g class="links__flow">
+            <use href="#wgen" class="wf w-gen" />
+            <use href="#wmd"  class="wf w-md" />
+            <use href="#wml"  class="wf w-ml" />
+            <use href="#wcfd" class="wf w-cfd" />
+          </g>
+          <g class="links__src">
+            <circle class="src w-md"  cx="138" cy="8" r="3.4" />
+            <circle class="src w-cfd" cx="156" cy="8" r="3.4" />
+            <circle class="src w-ml"  cx="174" cy="8" r="3.4" />
+            <circle class="src w-gen" cx="192" cy="8" r="3.4" />
+          </g>
+        </svg>
+
+        <!-- Genomics (right) -->
+        <figure class="sci right" data-sci="genomics">
+          <span class="sci__port" aria-hidden="true"></span>
+          <div class="sci__art art-dna">
             <div class="dna-tape">
-              <span class="base a">A</span><span class="base t">T</span><span class="base g">G</span><span class="base c">C</span><span class="base a">A</span><span class="base g">G</span><span class="base t">T</span><span class="base c">C</span><span class="base a">A</span><span class="base g">G</span><span class="base t">T</span><span class="base c">C</span><span class="base a">A</span><span class="base t">T</span><span class="base g">G</span><span class="base c">C</span>
+              <span class="base a">A</span><span class="base t">T</span><span class="base g">G</span><span class="base c">C</span><span class="base a">A</span><span class="base g">G</span><span class="base t">T</span><span class="base c">C</span><span class="base a">A</span><span class="base g">G</span><span class="base t">T</span><span class="base c">C</span>
             </div>
-            <div class="output-tag">GENOMICS</div>
           </div>
-        </div>
+          <figcaption>Genomics</figcaption>
+        </figure>
 
-        <!-- Lane 2: Molecular Dynamics -->
-        <div class="lane" data-lane="2">
-          <div class="wire"></div>
-          <div class="output output-md">
+        <!-- Molecular Design (left) -->
+        <figure class="sci left" data-sci="md">
+          <span class="sci__port" aria-hidden="true"></span>
+          <div class="sci__art art-md">
             <svg viewBox="0 0 120 120" class="molecule">
               <g class="bonds">
-                <line x1="60" y1="60" x2="30" y2="35"/>
-                <line x1="60" y1="60" x2="92" y2="35"/>
-                <line x1="60" y1="60" x2="30" y2="92"/>
-                <line x1="60" y1="60" x2="92" y2="92"/>
-                <line x1="30" y1="35" x2="92" y2="35"/>
-                <line x1="30" y1="92" x2="92" y2="92"/>
-                <line x1="30" y1="35" x2="30" y2="92"/>
-                <line x1="92" y1="35" x2="92" y2="92"/>
+                <line x1="60" y1="60" x2="30" y2="35" /><line x1="60" y1="60" x2="92" y2="35" />
+                <line x1="60" y1="60" x2="30" y2="92" /><line x1="60" y1="60" x2="92" y2="92" />
+                <line x1="30" y1="35" x2="92" y2="35" /><line x1="30" y1="92" x2="92" y2="92" />
+                <line x1="30" y1="35" x2="30" y2="92" /><line x1="92" y1="35" x2="92" y2="92" />
               </g>
               <g class="atoms">
-                <circle cx="60" cy="60" r="9" class="atom-c"/>
-                <circle cx="30" cy="35" r="7" class="atom-h"/>
-                <circle cx="92" cy="35" r="8" class="atom-o"/>
-                <circle cx="30" cy="92" r="8" class="atom-n"/>
-                <circle cx="92" cy="92" r="7" class="atom-h"/>
+                <circle cx="60" cy="60" r="9" class="atom-c" />
+                <circle cx="30" cy="35" r="7" class="atom-h" />
+                <circle cx="92" cy="35" r="8" class="atom-o" />
+                <circle cx="30" cy="92" r="8" class="atom-n" />
+                <circle cx="92" cy="92" r="7" class="atom-h" />
               </g>
             </svg>
-            <div class="output-tag">MOLECULAR DYNAMICS</div>
           </div>
-        </div>
+          <figcaption>Molecular Design</figcaption>
+        </figure>
 
-        <!-- Lane 3: Machine Learning -->
-        <div class="lane" data-lane="3">
-          <div class="wire"></div>
-          <div class="output output-ml">
+        <!-- Machine Learning & AI (right) -->
+        <figure class="sci right" data-sci="ml">
+          <span class="sci__port" aria-hidden="true"></span>
+          <div class="sci__art art-ml">
             <svg viewBox="0 0 140 100" class="net">
               <g class="edges">
-                <line x1="20" y1="20" x2="70" y2="20"/>
-                <line x1="20" y1="20" x2="70" y2="50"/>
-                <line x1="20" y1="20" x2="70" y2="80"/>
-                <line x1="20" y1="50" x2="70" y2="20"/>
-                <line x1="20" y1="50" x2="70" y2="50"/>
-                <line x1="20" y1="50" x2="70" y2="80"/>
-                <line x1="20" y1="80" x2="70" y2="20"/>
-                <line x1="20" y1="80" x2="70" y2="50"/>
-                <line x1="20" y1="80" x2="70" y2="80"/>
-                <line x1="70" y1="20" x2="120" y2="35"/>
-                <line x1="70" y1="20" x2="120" y2="65"/>
-                <line x1="70" y1="50" x2="120" y2="35"/>
-                <line x1="70" y1="50" x2="120" y2="65"/>
-                <line x1="70" y1="80" x2="120" y2="35"/>
-                <line x1="70" y1="80" x2="120" y2="65"/>
+                <line x1="20" y1="20" x2="70" y2="20" /><line x1="20" y1="20" x2="70" y2="50" /><line x1="20" y1="20" x2="70" y2="80" />
+                <line x1="20" y1="50" x2="70" y2="20" /><line x1="20" y1="50" x2="70" y2="50" /><line x1="20" y1="50" x2="70" y2="80" />
+                <line x1="20" y1="80" x2="70" y2="20" /><line x1="20" y1="80" x2="70" y2="50" /><line x1="20" y1="80" x2="70" y2="80" />
+                <line x1="70" y1="20" x2="120" y2="35" /><line x1="70" y1="20" x2="120" y2="65" />
+                <line x1="70" y1="50" x2="120" y2="35" /><line x1="70" y1="50" x2="120" y2="65" />
+                <line x1="70" y1="80" x2="120" y2="35" /><line x1="70" y1="80" x2="120" y2="65" />
               </g>
               <g class="nodes">
-                <circle cx="20" cy="20" r="5"/>
-                <circle cx="20" cy="50" r="5"/>
-                <circle cx="20" cy="80" r="5"/>
-                <circle cx="70" cy="20" r="5"/>
-                <circle cx="70" cy="50" r="5"/>
-                <circle cx="70" cy="80" r="5"/>
-                <circle cx="120" cy="35" r="5"/>
-                <circle cx="120" cy="65" r="5"/>
+                <circle cx="20" cy="20" r="5" /><circle cx="20" cy="50" r="5" /><circle cx="20" cy="80" r="5" />
+                <circle cx="70" cy="20" r="5" /><circle cx="70" cy="50" r="5" /><circle cx="70" cy="80" r="5" />
+                <circle cx="120" cy="35" r="5" /><circle cx="120" cy="65" r="5" />
               </g>
             </svg>
-            <div class="output-tag">MACHINE LEARNING</div>
           </div>
-        </div>
+          <figcaption>Machine Learning &amp; AI</figcaption>
+        </figure>
 
-        <!-- Lane 4: CFD / Combustion -->
-        <div class="lane" data-lane="4">
-          <div class="wire"></div>
-          <div class="output output-cfd">
+        <!-- CFD & CAE (left) -->
+        <figure class="sci left" data-sci="cfd">
+          <span class="sci__port" aria-hidden="true"></span>
+          <div class="sci__art art-cfd">
             <div class="flame-wrap">
               <div class="flame f1"></div>
               <div class="flame f2"></div>
               <div class="flame f3"></div>
             </div>
-            <div class="output-tag">CFD &amp; COMBUSTION</div>
           </div>
-        </div>
+          <figcaption>CFD &amp; CAE</figcaption>
+        </figure>
+
       </div>
     </div>
   </section>

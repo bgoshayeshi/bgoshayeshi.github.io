@@ -52,14 +52,25 @@
 
     <!-- ========================================================== HERO -->
     <section class="hero">
-      <div class="wrap">
-        <div class="hero__text reveal">
+      <div class="wrap hero__grid">
+        <div class="hero__head reveal">
           <p class="eyebrow">Scientific Computing, AI Platform, and R&amp;D Data Leader</p>
           <h1>A physics-trained leader who turns complex computational workflows, AI, and data pipelines into <em>enterprise-grade</em> solutions.</h1>
+        </div>
+
+        <!-- Computational-sciences flow: one HPC cluster (top) feeding genomics,
+             molecular design, machine learning & AI, and CFD & CAE (bottom). -->
+        <figure class="hero__viz reveal">
+          <iframe class="hero__viz-frame"
+                  src="assets/compute-viz/index.html"
+                  title="One HPC cluster feeding genomics, molecular design, machine learning and AI, and CFD and CAE"
+                  loading="lazy" scrolling="no"></iframe>
+        </figure>
+
+        <div class="hero__body reveal">
           <p class="hero__sub">
-            I build and lead platforms that connect scientific computing, AI, data engineering, HPC,
-            and cloud infrastructure. My work spans R&amp;D data systems, computational pipelines,
-            GPU-enabled workflows, AI-assisted automation, and founder-led product execution.
+            I help R&amp;D and engineering teams modernize how they run, scale, and automate
+            computational work.
           </p>
           <div class="hero__actions">
             <a class="btn btn--clay" href="#work">View work <span class="arrow">→</span></a>
@@ -72,14 +83,6 @@
             <span><span class="dot"></span> Founder of DiPhyx</span>
           </div>
         </div>
-
-        <!-- Computational pipelines: HPC clusters (left) feeding scientific applications (right) -->
-        <figure class="compute-figure compute-figure--hero reveal">
-          <iframe class="compute-figure__frame"
-                  src="assets/compute-viz/index.html"
-                  title="Computational pipelines: HPC clusters feeding genomics, molecular dynamics, machine learning, engineering simulation, and scientific AI workflows"
-                  loading="lazy" scrolling="no"></iframe>
-        </figure>
       </div>
 
       <!-- secondary tagline + affiliations -->
