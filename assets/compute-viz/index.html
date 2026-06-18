@@ -12,7 +12,7 @@
 <body>
   <!-- Vertical flow: one compute units (top) feeds four scientific domains (bottom).
        Embedded as a decorative hero backdrop — no name/title here. -->
-  <section class="viz" aria-label="compute units feeding genomics, molecular design, machine learning and AI, and CFD and CAE">
+  <section class="viz" aria-label="compute units feeding genomics, Bioinformatics, machine learning and AI, and CFD and CAE">
     <div class="stack">
 
       <!-- === Server: a single unit that enumerates the compute types === -->
@@ -73,27 +73,28 @@
           <figcaption>Genomics</figcaption>
         </figure>
 
-        <!-- Molecular Design (left) -->
+        <!-- Bioinformatics (left) -->
         <figure class="sci left" data-sci="md">
           <span class="sci__port" aria-hidden="true"></span>
           <div class="sci__art art-md">
-            <svg viewBox="0 0 120 120" class="molecule">
-              <g class="bonds">
-                <line x1="60" y1="60" x2="30" y2="35" /><line x1="60" y1="60" x2="92" y2="35" />
-                <line x1="60" y1="60" x2="30" y2="92" /><line x1="60" y1="60" x2="92" y2="92" />
-                <line x1="30" y1="35" x2="92" y2="35" /><line x1="30" y1="92" x2="92" y2="92" />
-                <line x1="30" y1="35" x2="30" y2="92" /><line x1="92" y1="35" x2="92" y2="92" />
-              </g>
-              <g class="atoms">
-                <circle cx="60" cy="60" r="9" class="atom-c" />
-                <circle cx="30" cy="35" r="7" class="atom-h" />
-                <circle cx="92" cy="35" r="8" class="atom-o" />
-                <circle cx="30" cy="92" r="8" class="atom-n" />
-                <circle cx="92" cy="92" r="7" class="atom-h" />
-              </g>
-            </svg>
+            <!-- 3D ball-and-stick molecule (tetrahedral): one central atom with
+                 four bonded atoms, rotating on a turntable so front atoms occlude
+                 the back ones. Pure CSS 3D (transform-style: preserve-3d). -->
+            <div class="mol3d">
+              <div class="mol3d__spin">
+                <span class="bond b1"></span>
+                <span class="bond b2"></span>
+                <span class="bond b3"></span>
+                <span class="bond b4"></span>
+                <span class="apos a1"><i class="atom atom-o"></i></span>
+                <span class="apos a2"><i class="atom atom-n"></i></span>
+                <span class="apos a3"><i class="atom atom-h"></i></span>
+                <span class="apos a4"><i class="atom atom-h"></i></span>
+                <span class="apos ac"><i class="atom atom-c"></i></span>
+              </div>
+            </div>
           </div>
-          <figcaption>Molecular Design</figcaption>
+          <figcaption>Bioinformatics</figcaption>
         </figure>
 
         <!-- Machine Learning & AI (right) -->

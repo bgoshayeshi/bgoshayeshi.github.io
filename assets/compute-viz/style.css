@@ -1,6 +1,6 @@
 /* Computational-sciences visualization — vertical flow.
    One HPC server (top) enumerates the compute types and feeds four scientific
-   domains (bottom): genomics, molecular design, machine learning & AI, CFD & CAE.
+   domains (bottom): genomics, Bioinformatics, machine learning & AI, CFD & CAE.
    Themed to the main site (warm ivory paper, clay accent, editorial mono).
    Embedded transparently as a hero backdrop. */
 
@@ -284,23 +284,67 @@ html, body {
     50%      { opacity: 1;    transform: translateY(-2px); }
 }
 
-/* === Molecular Design: rotating molecule === */
-.molecule {
-    width: 58px; height: 58px;
-    animation: rotate3d 12s linear infinite;
-    transform-origin: center;
+/* === Bioinformatics: 3D ball-and-stick molecule (pure CSS 3D) ===
+   Tetrahedral geometry: a central atom bonded to four atoms. The whole
+   assembly spins on a turntable (tilted) so atoms in front genuinely
+   occlude the ones behind. Each atom sphere is billboarded (counter-spun)
+   so its shaded face always points at the viewer. */
+.mol3d {
+    position: absolute;
+    inset: 0;
+    perspective: 360px;
 }
-.molecule .bonds line { stroke: rgba(26, 26, 24, 0.28); stroke-width: 1.2; }
-.molecule .atoms circle { stroke: rgba(26, 26, 24, 0.18); stroke-width: 0.6; }
-.molecule .atom-c { fill: var(--muted); }
-.molecule .atom-h { fill: #C9C4B6; }
-.molecule .atom-o { fill: var(--accent); }
-.molecule .atom-n { fill: var(--accent-3); }
+.mol3d__spin {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 0; height: 0;
+    transform-style: preserve-3d;
+    animation: molSpin 15s linear infinite;
+}
+@keyframes molSpin {
+    from { transform: rotateX(-18deg) rotateY(0deg); }
+    to   { transform: rotateX(-18deg) rotateY(360deg); }
+}
 
-@keyframes rotate3d {
-    0%   { transform: rotateY(0deg)   rotateX(10deg); }
-    100% { transform: rotateY(360deg) rotateX(10deg); }
+/* atom position anchors (tetrahedral, ~20px bond length) */
+.apos { position: absolute; top: 0; left: 0; transform-style: preserve-3d; }
+.apos.a1 { transform: translate3d( 11.5px,  11.5px,  11.5px); }
+.apos.a2 { transform: translate3d( 11.5px, -11.5px, -11.5px); }
+.apos.a3 { transform: translate3d(-11.5px,  11.5px, -11.5px); }
+.apos.a4 { transform: translate3d(-11.5px, -11.5px,  11.5px); }
+.apos.ac { transform: translate3d(0, 0, 0); }
+
+/* atom spheres — billboarded to always face the viewer */
+.atom {
+    position: absolute;
+    top: 0; left: 0;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(40, 30, 20, 0.28);
+    animation: molSpinInv 15s linear infinite;
 }
+@keyframes molSpinInv {
+    from { transform: rotateY(0deg)    rotateX(18deg); }
+    to   { transform: rotateY(-360deg) rotateX(18deg); }
+}
+.atom-c { width: 22px; height: 22px; margin: -11px; background: radial-gradient(circle at 32% 27%, #8b887d, #46443d 72%); }
+.atom-o { width: 16px; height: 16px; margin: -8px;  background: radial-gradient(circle at 32% 27%, #ecaa8e, #b5613f 72%); }
+.atom-n { width: 16px; height: 16px; margin: -8px;  background: radial-gradient(circle at 32% 27%, #7b8893, #34404a 72%); }
+.atom-h { width: 12px; height: 12px; margin: -6px;  background: radial-gradient(circle at 32% 27%, #ffffff, #c9c4b6 72%); }
+
+/* bonds — thin bars from the central atom to each outer atom */
+.bond {
+    position: absolute;
+    top: 0; left: 0;
+    width: 20px; height: 3px;
+    margin-top: -1.5px;
+    border-radius: 2px;
+    transform-origin: left center;
+    background: linear-gradient(to bottom, #d6d1c4, #afaa9b);
+}
+.bond.b1 { transform: rotate3d(0, -1,  1, 54.7356deg);  }
+.bond.b2 { transform: rotate3d(0,  1, -1, 54.7356deg);  }
+.bond.b3 { transform: rotate3d(0,  1,  1, 125.264deg);  }
+.bond.b4 { transform: rotate3d(0, -1, -1, 125.264deg);  }
 
 /* === Machine Learning & AI: neural net === */
 .net { width: 104px; height: 62px; }
