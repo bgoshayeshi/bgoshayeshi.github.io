@@ -100,6 +100,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.08; let
   font-family: var(--serif); font-size: 16px; font-weight: 600;
 }
 .brand__mark span { transform: translateY(0.5px); }
+.brand__logo { width: 22px; height: auto; display: block; filter: invert(1); }
 .nav__links { display: flex; align-items: center; gap: 28px; }
 .nav__links a { font-size: 15px; color: var(--ink-soft); transition: color .2s ease; }
 .nav__links a:hover { color: var(--ink); }
