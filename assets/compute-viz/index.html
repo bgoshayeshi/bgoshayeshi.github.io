@@ -10,16 +10,16 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Vertical flow: one HPC server (top) feeds four scientific domains (bottom).
+  <!-- Vertical flow: one compute units (top) feeds four scientific domains (bottom).
        Embedded as a decorative hero backdrop — no name/title here. -->
-  <section class="viz" aria-label="One HPC cluster feeding genomics, molecular design, machine learning and AI, and CFD and CAE">
+  <section class="viz" aria-label="compute units feeding genomics, molecular design, machine learning and AI, and CFD and CAE">
     <div class="stack">
 
       <!-- === Server: a single unit that enumerates the compute types === -->
       <div class="server">
         <div class="server__bar">
           <span class="led on"></span>
-          <span class="server__name">HPC&nbsp;CLUSTER</span>
+          <span class="server__name">COMPUTE&nbsp;UNIT</span>
           <span class="led on alt"></span>
         </div>
         <div class="server__chips">
@@ -34,15 +34,18 @@
       <!-- === Sciences: vertical zigzag, each fed by its own wire === -->
       <div class="sciences">
 
-        <!-- Connectors: four separate wires, one source per science on the HPC box,
+        <!-- Connectors: four separate wires, one source per science on the compute unit box,
              each landing on the top of its science box. Fixed px coordinate space
              (viewBox matches .sciences box) so wires meet the box tops exactly. -->
-        <svg class="links" viewBox="0 0 330 440" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <!-- Source order on the HPC box, left → right: MD, CFD, ML, Genomics -->
+        <svg class="links" viewBox="0 0 330 410" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <!-- Source order on the compute unit box, left → right: MD, CFD, ML, Genomics.
+               wcfd and wml run straight down the central gutter (clear of the
+               box above their target) before curving into their box top, so
+               they never pass under another box. -->
           <g class="links__base">
-            <path id="wmd"  d="M138,8 C138,72 78,106  78,136" />
-            <path id="wcfd" d="M156,8 C156,168 78,298  78,328" />
-            <path id="wml"  d="M174,8 C174,120 252,202 252,232" />
+            <path id="wmd"  d="M138,8 C138,67 78,96  78,126" />
+            <path id="wcfd" d="M156,8 C156,110 156,190 156,224 C156,255 102,295 78,298" />
+            <path id="wml"  d="M174,8 C174,80 174,125 174,150 C174,178 232,206 252,212" />
             <path id="wgen" d="M192,8 C192,24 252,10  252,40" />
           </g>
           <g class="links__flow">

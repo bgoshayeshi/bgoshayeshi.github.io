@@ -149,7 +149,7 @@ html, body {
     --box-w: 140px;        /* narrower science boxes */
     position: relative;
     width: 330px;
-    height: 440px;
+    height: 410px;
     margin: -4px auto 0;   /* nudge up so the wire sources sit at the server edge */
 }
 
@@ -165,9 +165,9 @@ html, body {
     z-index: 1;
 }
 .sci[data-sci="genomics"] { top: 40px;  right: 8px; }   /* right, top    */
-.sci[data-sci="md"]       { top: 136px; left: 8px;  }   /* left,  lower  */
-.sci[data-sci="ml"]       { top: 232px; right: 8px; }   /* right, lower  */
-.sci[data-sci="cfd"]      { top: 328px; left: 8px;  }   /* left,  bottom */
+.sci[data-sci="md"]       { top: 126px; left: 8px;  }   /* left,  lower  */
+.sci[data-sci="ml"]       { top: 212px; right: 8px; }   /* right, lower  */
+.sci[data-sci="cfd"]      { top: 298px; left: 8px;  }   /* left,  bottom */
 
 /* Connector wires (SVG overlay sharing the 330×440 coordinate space) */
 .links {
