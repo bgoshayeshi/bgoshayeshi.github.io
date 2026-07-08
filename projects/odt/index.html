@@ -126,6 +126,13 @@
     }
     .frame img, .frame video { width: 100%; }
 
+    /* Equal-height image frames so the two phase columns stay aligned */
+    .frame--fig {
+      aspect-ratio: 3 / 2;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .frame--fig img { width: auto; max-width: 100%; max-height: 100%; }
+
     /* ---------------------------------------------------- excalibur feature */
     .excal { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px; align-items: start; }
     .excal__fig { position: sticky; top: 76px; }
@@ -290,7 +297,7 @@
               source terms coupling the gas to the particle phase.
             </p>
             <figure>
-              <div class="frame" style="padding:18px">
+              <div class="frame frame--fig" style="padding:18px">
                 <img src="assets/droppedImage-10.png"
                      alt="Gas-phase conservation equations for mass, momentum, energy, and species, each with particle-coupling source terms." />
               </div>
@@ -313,7 +320,7 @@
               oxidation/gasification, exchanging mass, momentum, and heat with the gas.
             </p>
             <figure>
-              <div class="frame">
+              <div class="frame frame--fig">
                 <img src="assets/coalparticle2i-1.png"
                      alt="Schematic of a coal particle showing evaporation, devolatilization, and char oxidation processes." />
               </div>
