@@ -1,156 +1,378 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>One-Dimensional Turbulence Model, Babak Goshayeshi</title>
-<style>
-  /* ---- Faithful HTML reproduction of BabakGoshayeshi_Final.key (Keynote) ----
-     Original slide canvas: 1920 x 1080, "Black" theme.
-     All elements are positioned in original slide pixel coordinates inside
-     #stage, which is then scaled to fit the browser window. */
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background: #000;
-    overflow: hidden;
-    font-family: Georgia, "Times New Roman", serif;
-  }
+  <title>Two-Phase One-Dimensional Turbulence (ODT) Model | Babak Goshayeshi, Ph.D.</title>
+  <meta name="description" content="Doctoral research by Babak Goshayeshi: simulating single coal-particle combustion in laminar flow with detailed chemistry using a two-phase One-Dimensional Turbulence (ODT) model — gas-phase kinetics (GRI 3.0), devolatilization (CPD), and char oxidation." />
+  <meta name="author" content="Babak Goshayeshi" />
+  <link rel="canonical" href="https://bgoshayeshi.com/projects/odt/" />
 
-  #viewport {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #000;
-  }
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Two-Phase One-Dimensional Turbulence (ODT) Model" />
+  <meta property="og:description" content="Simulating single coal-particle combustion in laminar flow with detailed chemistry: gas-phase kinetics (GRI 3.0), devolatilization (CPD), and char oxidation." />
+  <meta property="og:url" content="https://bgoshayeshi.com/projects/odt/" />
+  <meta property="og:image" content="https://bgoshayeshi.com/projects/odt/assets/Brief2.png" />
+  <meta name="twitter:card" content="summary_large_image" />
 
-  #stage {
-    position: relative;
-    width: 1920px;
-    height: 1080px;
-    background: #000;
-    transform-origin: center center;
-    overflow: hidden;
-  }
+  <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../../assets/favicon-192.png" />
+  <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
 
-  .el { position: absolute; }
-  .el img, .el video { width: 100%; height: 100%; display: block; }
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
-  /* Title - Copperplate Gothic Bold, light silver, small-caps */
-  #title {
-    left: 330.78px; top: -1.5px; width: 1224.44px; height: 75px;
-    display: flex; align-items: center; justify-content: center;
-    color: #d8d8d8;
-    font-family: "Copperplate", "Copperplate Gothic Bold", "Trajan Pro", Georgia, serif;
-    font-weight: 700;
-    font-variant: small-caps;
-    font-size: 60px;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.8);
-  }
+  <style>
+    :root {
+      --bg:          #0D0C0B;   /* near-black, warm */
+      --bg-2:        #141312;
+      --card:        #191715;
+      --ink:         #EDEAE2;   /* warm off-white text */
+      --ink-soft:    #C9C5BA;
+      --muted:       #8F8B80;
+      --line:        #2B2823;
+      --clay:        #CC785C;   /* site terracotta */
+      --clay-bright: #E08A6A;
 
-  /* Section labels */
-  .label {
-    display: flex; align-items: center;
-    color: #ededed;
-    font-family: "Copperplate", "Copperplate Gothic Bold", Georgia, serif;
-    font-weight: 700;
-    font-variant: small-caps;
-    font-size: 46px;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-    text-shadow: 0 2px 5px rgba(0,0,0,0.8);
-  }
-  #lbl-gas   { left: 66.31px;   top: 91.5px; width: 275.27px; height: 71px; }
-  #lbl-coal  { left: 1532.77px; top: 91.5px; width: 322.47px; height: 71px; justify-content: flex-end; }
+      --serif: "Fraunces", Georgia, "Times New Roman", serif;
+      --sans:  "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+      --mono:  "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
 
-  /* Top-left brand (replaces ICSE logo) */
-  #brand {
-    display: flex; flex-direction: column; justify-content: center;
-    padding-left: 12px; color: #ededed;
-    font-family: Georgia, serif; line-height: 1.2;
-    text-shadow: 0 2px 5px rgba(0,0,0,0.8);
-  }
-  #brand span { font-size: 22px; font-weight: 700; }
-  #brand a { font-size: 14px; color: #cfcfcf; text-decoration: none; }
-  #brand a:hover { text-decoration: underline; }
+      --maxw: 1100px;
+      --radius: 14px;
+    }
 
-  /* Decorative red arrows under the title */
-  #arrows {
-    position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
-    pointer-events: none;
-  }
-</style>
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 17px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap { width: min(100% - 40px, var(--maxw)); margin-inline: auto; }
+
+    h1, h2, h3 {
+      font-family: var(--serif);
+      font-weight: 500;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      margin: 0;
+    }
+    p { margin: 0; }
+    img, video { max-width: 100%; height: auto; display: block; }
+
+    .eyebrow {
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--clay-bright);
+      margin: 0 0 14px;
+    }
+
+    /* ------------------------------------------------------------- top bar */
+    .bar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(13, 12, 11, 0.82);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+    .bar__inner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0;
+    }
+    .bar a { color: var(--ink-soft); text-decoration: none; font-size: 14px; }
+    .bar a:hover { color: var(--ink); }
+    .bar__brand { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink) !important; }
+    .bar__brand img { width: 26px; height: auto; filter: invert(1) brightness(1.4); }
+
+    /* --------------------------------------------------------------- header */
+    .head { padding: 72px 0 44px; }
+    .head h1 { font-size: clamp(34px, 5.4vw, 58px); max-width: 20ch; }
+    .head__sub {
+      margin-top: 22px; max-width: 62ch;
+      color: var(--ink-soft); font-size: 18px;
+    }
+    .head__meta {
+      margin-top: 26px; display: flex; flex-wrap: wrap; gap: 10px 26px;
+      font-family: var(--mono); font-size: 13px; color: var(--muted);
+    }
+    .head__meta .dot { color: var(--clay); margin-right: 7px; }
+
+    /* ------------------------------------------------------------- sections */
+    section { padding: 44px 0; border-top: 1px solid var(--line); }
+    .section__head { margin-bottom: 32px; }
+    .section__head h2 { font-size: clamp(26px, 3.6vw, 38px); }
+    .section__head p { margin-top: 12px; color: var(--ink-soft); max-width: 62ch; }
+
+    figure { margin: 0; }
+    figcaption {
+      margin-top: 12px;
+      font-size: 14px; color: var(--muted); line-height: 1.55;
+    }
+
+    .frame {
+      background: #000;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .frame img, .frame video { width: 100%; }
+
+    /* ---------------------------------------------------- excalibur feature */
+    .excal { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px; align-items: start; }
+    .excal__fig { position: sticky; top: 76px; }
+    .annos { display: flex; flex-direction: column; gap: 18px; }
+    .anno {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+    .anno h3 {
+      font-size: 19px; display: flex; align-items: baseline; gap: 10px;
+    }
+    .anno h3 .tag {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--clay-bright);
+    }
+    .anno p { margin-top: 8px; color: var(--ink-soft); font-size: 15.5px; }
+
+    /* ---------------------------------------------------------- two phases */
+    .phases { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    .phase h3 { font-size: 24px; margin-bottom: 8px; }
+    .phase > p { color: var(--ink-soft); font-size: 15.5px; max-width: 52ch; margin-bottom: 22px; }
+    .phase figure + figure { margin-top: 26px; }
+
+    /* ---------------------------------------------------------------- notes */
+    .note {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--clay);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 18px 22px;
+      color: var(--ink-soft); font-size: 15.5px;
+      max-width: 72ch;
+    }
+
+    /* --------------------------------------------------------------- footer */
+    footer { border-top: 1px solid var(--line); padding: 36px 0 48px; }
+    .foot__inner {
+      display: flex; flex-wrap: wrap; gap: 14px 28px;
+      align-items: center; justify-content: space-between;
+      font-size: 14px; color: var(--muted);
+    }
+    .foot__inner a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px solid var(--line); }
+    .foot__inner a:hover { color: var(--ink); border-color: var(--clay); }
+
+    /* ----------------------------------------------------------- responsive */
+    @media (max-width: 860px) {
+      .excal { grid-template-columns: 1fr; }
+      .excal__fig { position: static; }
+      .phases { grid-template-columns: 1fr; gap: 56px; }
+      .head { padding: 52px 0 36px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
 </head>
 <body>
-  <a href="/" style="position:fixed;top:18px;left:20px;z-index:9999;font-family:Inter,system-ui,sans-serif;font-size:13px;color:#eaeaea;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:7px 14px;text-decoration:none;backdrop-filter:blur(6px)">← Babak Goshayeshi</a>
-  <div id="viewport">
-    <div id="stage">
 
-      <!-- Center: "CO Excalibur" CO-concentration visualization (Brief2.pdf) -->
-      <!-- Box starts at the title's bottom (y=73.5) and runs to the slide bottom (y=1080);
-           object-fit:contain scales the tall image down so all of it is visible, top-aligned. -->
-      <div class="el" style="left:578.60px; top:73.5px; width:755.01px; height:1006.5px;">
-        <img src="assets/Brief2.png" alt="CO Excalibur: carbon monoxide concentration visualization with brief"
-             style="object-fit: contain; object-position: center top;">
-      </div>
-
-      <!-- Left: gas-phase governing equations (droppedImage-10.pdf) -->
-      <div class="el" style="left:49px; top:219px; width:539px; height:350.01px;">
-        <img src="assets/droppedImage-10.png" alt="Gas-phase conservation equations">
-      </div>
-
-      <!-- Right: coal particle schematic (coalparticle2i-1.tiff) -->
-      <div class="el" style="left:1424px; top:190.50px; width:416.11px; height:394px;">
-        <img src="assets/coalparticle2i-1.png" alt="Coal particle: char oxidation, devolatilization, evaporation">
-      </div>
-
-      <!-- Bottom-left: velocity profile movie (Vel2.mov) -->
-      <div class="el" style="left:6px; top:612px; width:582px; height:436.5px;">
-        <video src="assets/Vel2.webm" poster="assets/Vel2.png"
-               autoplay loop muted playsinline></video>
-      </div>
-
-      <!-- Bottom-right: temperature profile movie (Temp2.mov) -->
-      <div class="el" style="left:1335px; top:612px; width:596px; height:447px;">
-        <video src="assets/Temp2.webm" poster="assets/Temp2.png"
-               autoplay loop muted playsinline></video>
-      </div>
-
-      <!-- Top-left: name + website (replaces the ICSE logo) -->
-      <div class="el" id="brand" style="left:0px; top:-0.71px; height:43px;">
-        <span>Babak Goshayeshi</span>
-        <a href="http://www.bgoshayeshi.com" target="_blank" rel="noopener">WWW.bgoshayeshi.com</a>
-      </div>
-
-      <!-- Title -->
-      <div class="el" id="title">One-Dimensional Turbulence Model</div>
-
-      <!-- Section labels -->
-      <div class="el label" id="lbl-gas">Gas Phase</div>
-      <div class="el label" id="lbl-coal">Coal Particle</div>
-
-      
-
+  <div class="bar">
+    <div class="wrap bar__inner">
+      <a class="bar__brand" href="/">
+        <img src="../../assets/dragonfly_logo2.png" alt="" />
+        Babak Goshayeshi<span style="color:var(--muted);font-weight:400">, Ph.D.</span>
+      </a>
+      <a href="/#work">← Back to selected work</a>
     </div>
   </div>
 
+  <main>
+
+    <!-- ======================================================== HEADER -->
+    <header class="head wrap">
+      <p class="eyebrow">Doctoral research · Institute for Clean &amp; Secure Energy · University of Utah</p>
+      <h1>Two-Phase One-Dimensional Turbulence Model</h1>
+      <p class="head__sub">
+        Simulating the combustion of a single coal particle in laminar flow with fully detailed
+        chemistry — resolving gas-phase kinetics, devolatilization, and char oxidation at a
+        computational cost far below full 3-D direct numerical simulation.
+      </p>
+      <div class="head__meta">
+        <span><span class="dot">●</span>Computational modeling</span>
+        <span><span class="dot">●</span>Numerical methods</span>
+        <span><span class="dot">●</span>HPC</span>
+        <span><span class="dot">●</span>Reacting multiphase flow</span>
+      </div>
+    </header>
+
+    <!-- ================================================== CO EXCALIBUR -->
+    <section>
+      <div class="wrap">
+        <div class="section__head">
+          <p class="eyebrow">The result</p>
+          <h2>The “CO Excalibur”</h2>
+          <p>
+            Carbon monoxide concentration in the gas phase around a single burning coal particle,
+            resolved in space (horizontal) and time (vertical, top to bottom). The structure of the
+            CO field traces the physics — each part of the “sword” corresponds to a distinct
+            combustion mechanism.
+          </p>
+        </div>
+
+        <div class="excal">
+          <figure class="excal__fig">
+            <div class="frame">
+              <img src="assets/Brief2.png"
+                   alt="CO concentration field around a burning coal particle, shaped like a sword: a narrow bright grip at top, a wide glowing guard at the ignition point, and a long diffuse blade below." />
+            </div>
+            <figcaption>
+              CO concentration produced by simulating single coal-particle combustion in laminar
+              flow using detailed chemistry.
+            </figcaption>
+          </figure>
+
+          <div class="annos">
+            <div class="anno">
+              <h3>Grip <span class="tag">char oxidation</span></h3>
+              <p>The narrow early-time streak corresponds to production of CO by heterogeneous
+                 char oxidation at the particle surface.</p>
+            </div>
+            <div class="anno">
+              <h3>Guard <span class="tag">homogeneous ignition</span></h3>
+              <p>The bright cross-piece marks the homogeneous ignition of CO in the gas
+                 phase — the moment the accumulated CO ignites.</p>
+            </div>
+            <div class="anno">
+              <h3>Blade <span class="tag">devolatilization</span></h3>
+              <p>The long tail corresponds to production of CO by devolatilization of the coal
+                 particle as it heats and releases volatiles.</p>
+            </div>
+            <div class="note">
+              In the gas phase, detailed chemical kinetics based on the <strong>GRI 3.0</strong>
+              mechanism is utilized. On the particle side, models for vaporization,
+              devolatilization, and char oxidation/gasification are considered; devolatilization
+              uses the <strong>Chemical Percolation Devolatilization (CPD)</strong> model.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================== TWO PHASES -->
+    <section>
+      <div class="wrap">
+        <div class="section__head">
+          <p class="eyebrow">The model</p>
+          <h2>Two coupled phases</h2>
+          <p>
+            The ODT model resolves the full range of length and time scales along a single line of
+            sight, coupling a fully resolved gas phase to Lagrangian coal particles.
+          </p>
+        </div>
+
+        <div class="phases">
+
+          <div class="phase">
+            <h3>Gas phase</h3>
+            <p>
+              Conservation of mass, momentum, energy, and species are solved on the ODT line, with
+              source terms coupling the gas to the particle phase.
+            </p>
+            <figure>
+              <div class="frame" style="padding:18px">
+                <img src="assets/droppedImage-10.png"
+                     alt="Gas-phase conservation equations for mass, momentum, energy, and species, each with particle-coupling source terms." />
+              </div>
+              <figcaption>Gas-phase governing equations with particle source terms.</figcaption>
+            </figure>
+            <figure>
+              <div class="frame">
+                <video src="assets/Vel2.webm" poster="assets/Vel2.png"
+                       autoplay loop muted playsinline preload="metadata"
+                       aria-label="Animation of the gas velocity profile across the domain width evolving in time"></video>
+              </div>
+              <figcaption>Evolving velocity profile across the domain (m/s vs. width in mm).</figcaption>
+            </figure>
+          </div>
+
+          <div class="phase">
+            <h3>Coal particle</h3>
+            <p>
+              Each particle carries submodels for evaporation, devolatilization (CPD), and char
+              oxidation/gasification, exchanging mass, momentum, and heat with the gas.
+            </p>
+            <figure>
+              <div class="frame">
+                <img src="assets/coalparticle2i-1.png"
+                     alt="Schematic of a coal particle showing evaporation, devolatilization, and char oxidation processes." />
+              </div>
+              <figcaption>Coal-particle submodels: evaporation, devolatilization, char oxidation.</figcaption>
+            </figure>
+            <figure>
+              <div class="frame">
+                <video src="assets/Temp2.webm" poster="assets/Temp2.png"
+                       autoplay loop muted playsinline preload="metadata"
+                       aria-label="Animation of the gas temperature profile across the domain width evolving in time"></video>
+              </div>
+              <figcaption>Evolving temperature profile across the domain.</figcaption>
+            </figure>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== CONTEXT -->
+    <section>
+      <div class="wrap">
+        <div class="section__head">
+          <p class="eyebrow">Why it matters</p>
+          <h2>From equations to scientific software</h2>
+          <p>
+            This work is the technical foundation behind my platform career: modeling complex
+            physical systems, reducing computational cost with dimensional reduction, and
+            translating advanced numerical methods into usable, high-performance scientific
+            software. The same discipline now drives how I build computational platforms at
+            <a href="https://www.diphyx.com/" target="_blank" rel="noopener"
+               style="color:var(--clay-bright);text-decoration:none;border-bottom:1px solid var(--line)">DiPhyx</a>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="wrap foot__inner">
+      <span>© Babak Goshayeshi, Ph.D. · Institute for Clean &amp; Secure Energy, University of Utah</span>
+      <span>
+        <a href="https://scholar.google.com/citations?user=orPxOuMAAAAJ&amp;hl=en" target="_blank" rel="noopener">Publications on Google Scholar</a>
+        &nbsp;·&nbsp;
+        <a href="/">bgoshayeshi.com</a>
+      </span>
+    </div>
+  </footer>
+
   <script>
-    // Scale the fixed 1920x1080 stage to fit the window, preserving aspect ratio.
-    (function () {
-      var stage = document.getElementById('stage');
-      function fit() {
-        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-        stage.style.transform = 'scale(' + s + ')';
-      }
-      window.addEventListener('resize', fit);
-      fit();
-    })();
+    // Respect reduced-motion: swap autoplaying loops for their posters.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.querySelectorAll("video[autoplay]").forEach(function (v) {
+        v.removeAttribute("autoplay");
+        v.pause();
+        v.setAttribute("controls", "");
+      });
+    }
   </script>
 </body>
 </html>
