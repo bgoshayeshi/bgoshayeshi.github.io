@@ -105,6 +105,15 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.08; let
 .nav__links a { font-size: 15px; color: var(--ink-soft); transition: color .2s ease; }
 .nav__links a:hover { color: var(--ink); }
 .nav__cta { display: flex; align-items: center; gap: 14px; }
+.nav__blog {
+  font-size: 15px; font-weight: 500;
+  padding: 9px 18px; border-radius: 999px;
+  color: var(--clay-deep);
+  background: color-mix(in srgb, var(--clay) 14%, var(--paper));
+  border: 1px solid color-mix(in srgb, var(--clay) 30%, var(--paper));
+  transition: background .2s ease, border-color .2s ease, transform .15s ease;
+}
+.nav__blog:hover { background: color-mix(in srgb, var(--clay) 22%, var(--paper)); transform: translateY(-1px); }
 .nav__toggle { display: none; background: none; border: 0; cursor: pointer; padding: 8px; }
 .nav__toggle span { display: block; width: 22px; height: 2px; background: var(--ink); margin: 4px 0; transition: .25s; }
 
@@ -334,6 +343,7 @@ section { padding: 84px 0; }
   .hero { padding: 40px 0 24px; }
   .hero__viz-frame { height: 320px; }
   .nav__links, .nav__cta .btn { display: none; }
+  .nav__blog { font-size: 14px; padding: 7px 14px; }
   .nav__toggle { display: block; }
   .nav.open .nav__links {
     display: flex; flex-direction: column; gap: 0;

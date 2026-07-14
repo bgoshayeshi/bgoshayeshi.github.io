@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Blog | Babak Goshayeshi, Ph.D.</title>
+  <meta name="description" content="Writing by Babak Goshayeshi, Ph.D. on scientific computing, AI platforms, HPC and cloud infrastructure, computational pipelines, and R&amp;D data systems." />
+  <meta name="author" content="Babak Goshayeshi" />
+  <link rel="canonical" href="https://bgoshayeshi.com/blog/" />
+
+  <!-- Open Graph / LinkedIn -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Blog | Babak Goshayeshi, Ph.D." />
+  <meta property="og:description" content="Writing on scientific computing, AI platforms, HPC and cloud infrastructure, computational pipelines, and R&amp;D data systems." />
+  <meta property="og:url" content="https://bgoshayeshi.com/blog/" />
+  <meta property="og:image" content="https://bgoshayeshi.com/assets/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://bgoshayeshi.com/assets/og-image.png" />
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+
+  <style>
+    /* blog listing */
+    .blog-hero { padding: 72px 0 20px; }
+    .blog-hero h1 { font-size: clamp(32px, 4.2vw, 52px); margin: 0 0 18px; letter-spacing: -0.02em; }
+    .blog-hero p { font-size: 18px; color: var(--ink-soft); max-width: 58ch; margin: 0; }
+
+    .blog-list { padding: 44px 0 84px; }
+    .post-card {
+      display: block;
+      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 28px 30px; margin-bottom: 18px;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .post-card:hover { transform: translateY(-3px); box-shadow: 0 26px 50px -30px rgba(40,30,20,.45); border-color: var(--line-strong); }
+    .post-card__meta { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--clay-deep); margin: 0 0 10px; }
+    .post-card h2 { font-size: 24px; margin: 0 0 10px; }
+    .post-card p { margin: 0; color: var(--muted); font-size: 15.5px; }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================ NAV -->
+  <header class="nav" id="nav">
+    <div class="wrap nav__inner">
+      <a class="brand" href="/" aria-label="Babak Goshayeshi, home">
+        <span class="brand__mark"><img class="brand__logo" src="/assets/dragonfly_logo2.png" alt="" /></span>
+        Babak&nbsp;Goshayeshi<span style="color:var(--muted);font-weight:400">, Ph.D.</span>
+      </a>
+      <nav class="nav__links" id="navLinks" aria-label="Primary">
+        <a href="/#about">About</a>
+        <a href="/#ventures">Platforms</a>
+        <a href="/#work">Work</a>
+        <a href="/#experience">Experience</a>
+        <a href="/#contact">Contact</a>
+      </nav>
+      <div class="nav__cta">
+        <a class="nav__blog" href="/blog/" aria-current="page">Blog</a>
+        <a class="btn btn--primary" href="/#contact">Get in touch</a>
+      </div>
+      <button class="nav__toggle" id="navToggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ========================================================== HERO -->
+    <section class="blog-hero">
+      <div class="wrap">
+        <p class="eyebrow reveal">Blog</p>
+        <h1 class="reveal">Notes on scientific computing, AI, and platforms.</h1>
+        <p class="reveal">
+          Writing on computational pipelines, HPC and cloud infrastructure, AI platforms,
+          R&amp;D data systems, and the craft of turning scientific software into products.
+        </p>
+      </div>
+    </section>
+
+    <!-- ========================================================= POSTS -->
+    <section class="blog-list">
+      <div class="wrap">
+
+        <!-- Post template — copy and point href at /blog/<slug>/ :
+        <a class="post-card reveal" href="/blog/my-first-post/">
+          <p class="post-card__meta">2026-07-14 · Scientific computing</p>
+          <h2>Post title goes here</h2>
+          <p>One- or two-sentence summary of the post.</p>
+        </a>
+        -->
+
+        <a class="post-card reveal" href="/blog/physics-informed-neural-networks/">
+          <p class="post-card__meta">July 14, 2026 · Scientific computing · Machine learning</p>
+          <h2>What Are Physics-Informed Neural Networks (PINNs)?</h2>
+          <p>A plain-language introduction to PINNs: how a PDE becomes part of a neural network's
+             loss function, why that helps when data is sparse, and where classical solvers still win.</p>
+        </a>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================== FOOTER -->
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <span>© <span id="year">2026</span> Babak Goshayeshi, Ph.D. · San Diego, California</span>
+      <span>Built as a static site · hosted on GitHub Pages</span>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+</body>
+</html>
