@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>One-Dimensional Turbulence (ODT) Model | Babak Goshayeshi, Ph.D.</title>
+  <meta name="description" content="An introduction to the One-Dimensional Turbulence (ODT) model: how reducing turbulence to one dimension with stochastic triplet maps makes high-fidelity simulation affordable, and where the model is used." />
+  <meta name="author" content="Babak Goshayeshi" />
+  <link rel="canonical" href="https://bgoshayeshi.com/blog/one-dimensional-turbulence-odt-model/" />
+
+  <!-- Open Graph / LinkedIn -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="One-Dimensional Turbulence (ODT) Model" />
+  <meta property="og:description" content="How reducing turbulence to one dimension with stochastic triplet maps makes high-fidelity simulation affordable — and where the ODT model is used." />
+  <meta property="og:url" content="https://bgoshayeshi.com/blog/one-dimensional-turbulence-odt-model/" />
+  <meta property="og:image" content="https://bgoshayeshi.com/blog/one-dimensional-turbulence-odt-model/coal-combustion-odt.jpeg" />
+  <meta property="article:published_time" content="2023-04-16" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://bgoshayeshi.com/blog/one-dimensional-turbulence-odt-model/coal-combustion-odt.jpeg" />
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "One-Dimensional Turbulence (ODT) Model",
+    "description": "An introduction to the One-Dimensional Turbulence (ODT) model: how reducing turbulence to one dimension with stochastic triplet maps makes high-fidelity simulation affordable, and where the model is used.",
+    "datePublished": "2023-04-16",
+    "url": "https://bgoshayeshi.com/blog/one-dimensional-turbulence-odt-model/",
+    "image": "https://bgoshayeshi.com/blog/one-dimensional-turbulence-odt-model/coal-combustion-odt.jpeg",
+    "author": {
+      "@type": "Person",
+      "name": "Babak Goshayeshi",
+      "honorificSuffix": "Ph.D.",
+      "url": "https://bgoshayeshi.com/"
+    }
+  }
+  </script>
+
+  <style>
+    /* article layout */
+    .post { padding: 72px 0 84px; }
+    .post__head { max-width: 760px; margin: 0 auto 40px; }
+    .post__head h1 { font-size: clamp(30px, 4vw, 46px); margin: 0 0 18px; letter-spacing: -0.02em; }
+    .post__meta { font-family: var(--mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .post__meta a { color: var(--clay-deep); }
+
+    .post__content { max-width: 760px; margin: 0 auto; font-size: 17.5px; color: var(--ink-soft); }
+    .post__content h2 { font-size: 27px; margin: 44px 0 14px; color: var(--ink); }
+    .post__content p { margin: 0 0 20px; }
+    .post__content strong { color: var(--ink); font-weight: 600; }
+    .post__content ul { margin: 0 0 20px; padding-left: 22px; }
+    .post__content li { margin-bottom: 8px; }
+    .post__content a { color: var(--clay-deep); border-bottom: 1px solid var(--line-strong); padding-bottom: 1px; }
+    .post__content a:hover { border-color: var(--clay); }
+    .post__content code { font-family: var(--mono); font-size: 0.88em; background: var(--card); border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; }
+
+    .post__fig { margin: 28px 0; text-align: center; }
+    .post__fig img {
+      max-width: 100%; height: auto; border-radius: var(--radius-sm);
+      border: 1px solid var(--line); background: #fff;
+    }
+    .post__fig--narrow img { max-width: min(480px, 100%); }
+    .post__fig figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); }
+
+    .post__note {
+      border-left: 3px solid var(--clay); background: var(--paper-2);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 16px 20px; margin: 0 0 20px; font-size: 16px;
+    }
+
+    .post__footer { max-width: 760px; margin: 48px auto 0; padding-top: 28px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================ NAV -->
+  <header class="nav" id="nav">
+    <div class="wrap nav__inner">
+      <a class="brand" href="/" aria-label="Babak Goshayeshi, home">
+        <span class="brand__mark"><img class="brand__logo" src="/assets/dragonfly_logo2.png" alt="" /></span>
+        Babak&nbsp;Goshayeshi<span style="color:var(--muted);font-weight:400">, Ph.D.</span>
+      </a>
+      <nav class="nav__links" id="navLinks" aria-label="Primary">
+        <a href="/#about">About</a>
+        <a href="/#ventures">Platforms</a>
+        <a href="/#work">Work</a>
+        <a href="/#experience">Experience</a>
+        <a href="/#contact">Contact</a>
+      </nav>
+      <div class="nav__cta">
+        <a class="nav__blog" href="/blog/">Blog</a>
+        <a class="btn btn--primary" href="/#contact">Get in touch</a>
+      </div>
+      <button class="nav__toggle" id="navToggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <article class="post">
+      <div class="wrap">
+
+        <header class="post__head reveal">
+          <p class="eyebrow">Scientific computing · Turbulence modeling</p>
+          <h1>One-Dimensional Turbulence (ODT) Model</h1>
+          <p class="post__meta">April 16, 2023 ·
+            <a href="https://medium.com/@bgoshayeshi/one-dimensional-turbulence-odt-model-b828e7ae62e6" target="_blank" rel="noopener">Originally published on Medium</a> ·
+            <a href="/blog/">← All posts</a></p>
+        </header>
+
+        <div class="post__content reveal">
+
+          <p>
+            Turbulence, an ever-present phenomenon in nature, is a complex, chaotic, and non-linear
+            process. While it has been extensively studied for centuries, accurately predicting and
+            simulating turbulent flows remains an ongoing challenge for scientists and engineers.
+            There are many advancements in the field of Computational Fluid Dynamics (CFD) to
+            simulate turbulent flows:
+          </p>
+
+          <ul>
+            <li><strong>Direct Numerical Simulation (DNS)</strong> is a computational method that
+                accurately resolves all the scales of turbulent flow, providing a detailed and
+                comprehensive understanding of turbulence at the expense of high computational costs.</li>
+            <li><strong>Large Eddy Simulation (LES)</strong> is a computational technique that models
+                large-scale turbulent structures while filtering out smaller scales, offering a balance
+                between computational efficiency and the accurate representation of turbulent flow
+                dynamics.</li>
+            <li><strong>Reynolds-Averaged Navier-Stokes (RANS)</strong> is a widely used turbulence
+                modeling approach that simplifies the governing equations by averaging the flow
+                variables over time, enabling efficient simulations of complex turbulent flows at the
+                cost of reduced accuracy in capturing transient phenomena.</li>
+          </ul>
+
+          <p>
+            One of the more recent and promising advancements in this field is the
+            <strong>One-Dimensional Turbulence (ODT)</strong> model. ODT provides a unique approach to
+            modeling turbulent flow, offering insights into the complex world of turbulence.
+          </p>
+
+          <p>
+            In this article, we will explore the fundamentals of the ODT model, its applications, and
+            how it has revolutionized our understanding of turbulent flows.
+          </p>
+
+          <h2>The One-Dimensional Turbulence Model: A Closer Look</h2>
+
+          <p>
+            First proposed by
+            <a href="https://www.linkedin.com/in/alan-kerstein-ab63ab1b/" target="_blank" rel="noopener">Dr.&nbsp;Alan Kerstein</a>
+            in the late 1990s, the One-Dimensional Turbulence (ODT) model is a stochastic model to
+            simulate turbulent flows. Unlike conventional models, ODT reduces the spatial
+            dimensionality of the problem to one, allowing for the study of turbulence at
+            significantly reduced computational costs.
+          </p>
+
+          <h2>Key Features of the ODT Model</h2>
+
+          <ul>
+            <li><strong>Spatial Dimension Reduction:</strong> By reducing the spatial dimensionality to
+                one, the ODT model greatly simplifies the turbulent flow problem, making it more
+                computationally efficient than traditional three-dimensional models.</li>
+            <li><strong>Stochastic Approach:</strong> The ODT model uses random processes, or
+                “triplet maps,” to simulate the complex interactions between turbulent eddies. This
+                stochastic approach provides an accurate representation of turbulent energy transfer
+                and dissipation.</li>
+            <li><strong>Adaptive Mesh:</strong> ODT employs an adaptive mesh, which automatically
+                refines or coarsens in response to local flow conditions. This feature ensures that the
+                model captures the essential features of the turbulent flow, providing high-fidelity
+                results.</li>
+          </ul>
+
+          <h2>Applications of the ODT Model</h2>
+
+          <p>The ODT model has been successfully applied to a wide range of turbulent flow problems, including:</p>
+
+          <ul>
+            <li><strong>Combustion:</strong> ODT has been used to study turbulent premixed and
+                non-premixed combustion, providing insights into flame stability, pollutant formation,
+                and heat transfer.</li>
+            <li><strong>Atmospheric Flows:</strong> ODT has been applied to model atmospheric boundary
+                layers, cloud microphysics, and pollutant dispersion, leading to a deeper understanding
+                of these complex processes.</li>
+            <li><strong>Turbulent Mixing:</strong> The model has been utilized to study turbulent mixing
+                in various settings, such as jet mixing, shear layers, and stratified flows.</li>
+            <li><strong>Industrial Processes:</strong> ODT has been employed to optimize and improve
+                industrial processes like chemical reactors, heat exchangers, and fluidized beds, where
+                turbulent flows play a crucial role.</li>
+          </ul>
+
+          <h2>Revolutionizing Our Understanding of Turbulent Flows</h2>
+
+          <p>
+            The One-Dimensional Turbulence model has significantly advanced our understanding of
+            turbulent flows. By reducing computational complexity, ODT has made it possible to study
+            intricate turbulent phenomena that were previously inaccessible due to computational
+            limitations.
+          </p>
+
+          <p>
+            Moreover, the ODT model's stochastic approach has provided a fresh perspective on the
+            fundamental nature of turbulence, shedding new light on the energy cascade, turbulent
+            mixing, and dissipation processes. The model's adaptability has allowed researchers to
+            explore a wide range of turbulent flow problems, leading to new discoveries and improved
+            understanding in various fields.
+          </p>
+
+          <h2>Triplet Mapping</h2>
+
+          <p>
+            The triplet mapping is the heart of the ODT model and has an impact on an initially linear
+            velocity profile <code>u(y, t)</code>.
+          </p>
+
+          <p>
+            <strong>(a) Initial profile:</strong> The velocity profile begins as a linear function of
+            the spatial variable <code>y</code> and time <code>t</code>.
+          </p>
+
+          <p>
+            <strong>(b) Velocity profile after applying the triplet map:</strong> When the triplet map
+            is applied to a specific interval (denoted by ticks), the velocity profile in that interval
+            is modified, with energy and momentum being redistributed among the subintervals.
+          </p>
+
+          <p>
+            <strong>(c) Discrete representation of the initial profile:</strong> In a discrete
+            representation with nine cells, the triplet map's application illustrates the
+            transformation of the interval into three distinct images. For clarity, dashed arrows
+            indicate the formation of the central image of the original interval.
+          </p>
+
+          <figure class="post__fig post__fig--narrow reveal">
+            <img src="triplet-map.png" alt="Diagram of the triplet map: an initial linear velocity profile, the profile after the triplet map is applied, and a discrete nine-cell representation showing the three compressed images of the mapped interval." width="483" height="508" loading="lazy" />
+            <figcaption>Triplet mapping</figcaption>
+          </figure>
+
+          <p>
+            The triplet map plays a crucial role in simulating turbulent eddy interactions and
+            capturing the complex behavior of turbulent flows in the ODT model. For more information
+            read <a href="https://www.researchgate.net/publication/231859610_One-dimensional_turbulence_Model_formulation_and_application_to_homogeneous_turbulence_shear_flows_and_buoyant_stratified_flows" target="_blank" rel="noopener">Alan Kerstein's paper</a>.
+          </p>
+
+          <p>
+            To mitigate the influence of stochastic eddies on the final results in the ODT model, an
+            ensemble approach can be employed. By utilizing different random seeds, the same simulation
+            is repeated multiple times, allowing for the capture of various realizations of the
+            turbulent flow. At the end of these simulations, an ensemble average is computed, providing
+            a more robust and representative result that accounts for the inherent variability and
+            randomness of turbulence. This approach helps to minimize the uncertainties associated with
+            the stochastic nature of the ODT model and enhances the reliability of the findings.
+          </p>
+
+          <figure class="post__fig reveal">
+            <img src="coal-combustion-odt.jpeg" alt="Space-time mapped contour plots from a 300-ensemble averaged ODT simulation of coal combustion." width="1585" height="1071" loading="lazy" />
+            <figcaption>Coal combustion using ODT: space-time mapped contour plots of a 300-ensemble averaged ODT simulation.</figcaption>
+          </figure>
+
+          <h2>Where to Run</h2>
+
+          <p>
+            Acquiring and utilizing the ODT model involves two primary methods: compiling the source
+            code on your machine or using a pre-installed version on a cloud-computing platform.
+          </p>
+
+          <ul>
+            <li><strong>Source Code Compilation:</strong> You can clone the
+                <a href="https://gitlab.multiscale.utah.edu/common/ODT" target="_blank" rel="noopener">ODT source code</a>
+                and compile it on your desired machine. However, the installation process, like many
+                other scientific models, is very complex and is not as straightforward as commercial
+                software. For example, various dependencies and libraries need to be carefully
+                installed, taking into account the infrastructure and operating system of your
+                machine.</li>
+            <li><strong>Cloud-Computing Platforms:</strong> Another approach is to use a cloud-computing
+                platform where ODT is already installed and ready for use. For example,
+                <a href="https://aws.amazon.com/" target="_blank" rel="noopener">Amazon Web Services (AWS)</a>
+                offers a pre-configured environment, allowing you to bypass the installation process
+                and focus on running your simulations.</li>
+          </ul>
+
+        </div>
+
+        <footer class="post__footer reveal">
+          <a class="btn btn--ghost" href="/blog/">← All posts</a>
+          <a class="btn btn--clay" href="/#contact">Get in touch <span class="arrow">→</span></a>
+        </footer>
+
+      </div>
+    </article>
+  </main>
+
+  <!-- ======================================================== FOOTER -->
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <span>© <span id="year">2026</span> Babak Goshayeshi, Ph.D. · San Diego, California</span>
+      <span>Built as a static site · hosted on GitHub Pages</span>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+</body>
+</html>
