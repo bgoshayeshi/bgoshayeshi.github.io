@@ -268,6 +268,30 @@ section { padding: 84px 0; }
 .pcard__foot { display: flex; align-items: center; justify-content: space-between; }
 .pcard__focus { font-size: 13px; color: var(--ink-soft); }
 .pcard__go { font-size: 14px; font-weight: 500; color: var(--ink); display: inline-flex; gap: 6px; align-items: center; }
+.pcard__go--cta {
+  font-size: 15px; font-weight: 700; color: #fff;
+  padding: 12px 24px; border-radius: 999px;
+  background: linear-gradient(120deg, var(--clay), var(--clay-deep), var(--olive), var(--clay));
+  background-size: 300% 100%;
+  animation: cta-sheen 6s ease-in-out infinite;
+  box-shadow: 0 10px 24px -12px rgba(181, 97, 63, 0.65);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.pcard__go--cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -12px rgba(181, 97, 63, 0.8);
+  animation-duration: 2.5s;
+}
+.pcard__go--cta .arrow { transition: transform .2s ease; }
+.pcard__go--cta:hover .arrow { transform: translateX(4px); }
+@keyframes cta-sheen {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pcard__go--cta { animation: none; }
+}
 .pcard--feature { grid-column: span 2; }
 .tag-todo { font-family: var(--mono); font-size: 10px; letter-spacing:.1em; text-transform: uppercase; color: var(--muted);
   border: 1px dashed var(--line-strong); border-radius: 999px; padding: 2px 8px; }
