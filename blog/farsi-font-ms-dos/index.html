@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Building a Farsi Font for MS-DOS | Babak Goshayeshi, Ph.D.</title>
+  <meta name="description" content="How a missing decent Farsi font for a FoxPro project sent a high-schooler deep into C, pointers, and interrupts: designing 8×16 glyphs on grid paper and writing a right-to-left text-rendering engine for MS-DOS." />
+  <meta name="author" content="Babak Goshayeshi" />
+  <link rel="canonical" href="https://bgoshayeshi.com/blog/farsi-font-ms-dos/" />
+
+  <!-- Open Graph / LinkedIn -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Building a Farsi Font for MS-DOS" />
+  <meta property="og:description" content="Designing 8×16 glyphs on grid paper and writing a right-to-left text-rendering engine for MS-DOS, armed with C, pointers, and interrupts." />
+  <meta property="og:url" content="https://bgoshayeshi.com/blog/farsi-font-ms-dos/" />
+  <meta property="og:image" content="https://bgoshayeshi.com/blog/farsi-font-ms-dos/ms_dos_screenshot.png" />
+  <meta property="article:published_time" content="2026-08-06" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://bgoshayeshi.com/blog/farsi-font-ms-dos/ms_dos_screenshot.png" />
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Building a Farsi Font for MS-DOS",
+    "description": "How a missing decent Farsi font for a FoxPro project sent a high-schooler deep into C, pointers, and interrupts: designing 8×16 glyphs on grid paper and writing a right-to-left text-rendering engine for MS-DOS.",
+    "datePublished": "2026-08-06",
+    "url": "https://bgoshayeshi.com/blog/farsi-font-ms-dos/",
+    "image": "https://bgoshayeshi.com/blog/farsi-font-ms-dos/ms_dos_screenshot.png",
+    "author": {
+      "@type": "Person",
+      "name": "Babak Goshayeshi",
+      "honorificSuffix": "Ph.D.",
+      "url": "https://bgoshayeshi.com/"
+    }
+  }
+  </script>
+
+  <style>
+    /* article layout */
+    .post { padding: 72px 0 84px; }
+    .post__head { max-width: 760px; margin: 0 auto 40px; }
+    .post__head h1 { font-size: clamp(30px, 4vw, 46px); margin: 0 0 18px; letter-spacing: -0.02em; }
+    .post__meta { font-family: var(--mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .post__meta a { color: var(--clay-deep); }
+
+    .post__content { max-width: 760px; margin: 0 auto; font-size: 17.5px; color: var(--ink-soft); }
+    .post__content h2 { font-size: 27px; margin: 44px 0 14px; color: var(--ink); }
+    .post__content h3 { font-size: 21px; margin: 34px 0 12px; color: var(--ink); }
+    .post__content h4 { font-size: 17px; margin: 26px 0 10px; color: var(--ink); }
+    .post__content p { margin: 0 0 20px; }
+    .post__content strong { color: var(--ink); font-weight: 600; }
+    .post__content ul { margin: 0 0 20px; padding-left: 22px; }
+    .post__content li { margin-bottom: 8px; }
+    .post__content a { color: var(--clay-deep); border-bottom: 1px solid var(--line-strong); padding-bottom: 1px; }
+    .post__content a:hover { border-color: var(--clay); }
+    .post__content code { font-family: var(--mono); font-size: 0.88em; background: var(--card); border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; }
+
+    .post__note {
+      border-left: 3px solid var(--clay); background: var(--paper-2);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 16px 20px; margin: 0 0 20px; font-size: 16px;
+    }
+
+    .post__footer { max-width: 760px; margin: 48px auto 0; padding-top: 28px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+
+    /* dialogue quotes */
+    .dialogue { margin: 0 0 20px 1.2em; border-left: 2px solid var(--line-strong); padding-left: 18px; }
+    .dialogue p { margin: 0.5em 0; }
+    .dialogue .who { font-family: var(--mono); font-size: 0.78em; color: var(--clay-deep); margin-right: 6px; }
+
+    .big-farsi { text-align: center; font-size: 2.6em; margin: 0.6em 0; line-height: 1.4; color: var(--ink); }
+
+    /* accordion */
+    details.accordion { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); padding: 0 22px; margin: 2.2em 0; }
+    details.accordion summary { cursor: pointer; font-family: var(--mono); font-size: 15px; color: var(--ink); padding: 16px 0; }
+    details.accordion summary::marker { color: var(--clay-deep); }
+    details.accordion summary:hover { color: var(--clay-deep); }
+    details.accordion[open] summary { border-bottom: 1px solid var(--line); }
+    details.accordion > p:last-of-type { margin-bottom: 1.4em; }
+
+    /* color tables */
+    .colortable { border-collapse: collapse; font-family: var(--mono); font-size: 13px; margin: 0 auto 24px; }
+    .colortable th, .colortable td { border: 1px solid var(--line-strong); padding: 6px 16px; text-align: left; }
+    .colortable th { color: var(--muted); font-weight: 500; }
+    .swatch {
+      display: inline-block; width: 34px; height: 15px;
+      border: 1px solid var(--line-strong); border-radius: 2px;
+      vertical-align: middle; margin-left: 10px;
+    }
+
+    /* ================= retro DOS panels =================
+       Dark "CRT" palette, scoped so it never leaks into the page theme. */
+    .retro, pre.dos-text {
+      --bg: #0d0d10;
+      --panel: #16161c;
+      --border: #2c2c36;
+      --text: #d6d6dd;
+      --muted: #8a8a96;
+      --accent: #55ff55;
+      --pixel-on: #55ff55;
+      --pixel-off: #1b1b22;
+      --dos-bg: #000000;
+      --dos-fg: #AAAAAA;
+    }
+
+    figure.retro {
+      margin: 28px 0;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 24px;
+      overflow-x: auto;
+    }
+    figure.retro img { display: block; max-width: 100%; margin: 0 auto; border-radius: 4px; }
+    figure.retro figcaption {
+      font-family: var(--mono); font-size: 12.5px; color: var(--muted);
+      margin-top: 18px; line-height: 1.5;
+    }
+
+    pre.dos-text {
+      font-family: var(--mono);
+      background: var(--dos-bg);
+      color: var(--dos-fg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      font-size: 15px;
+      line-height: 1.9;
+      overflow-x: auto;
+      margin: 0 0 24px;
+    }
+
+    /* ---- glyph bitmap figures ---- */
+    .glyphs { display: flex; flex-wrap: wrap; gap: 48px; justify-content: center; }
+    .glyph { font-family: var(--mono); }
+    .glyph-title { text-align: center; color: var(--accent); font-size: 13px; margin-bottom: 12px; }
+    .glyph-rows { display: grid; row-gap: 1px; }
+    .glyph-row { display: grid; grid-template-columns: repeat(8, 22px) auto auto; align-items: center; }
+    .px { width: 22px; height: 22px; border: 1px solid #000; }
+    .px.on { background: var(--pixel-on); box-shadow: inset 0 0 4px rgba(0,0,0,0.35); }
+    .px.off { background: var(--pixel-off); }
+    .px.hl { background: #2a2a14; }
+    .byte-bin { font-size: 11px; color: var(--muted); padding-left: 14px; letter-spacing: 1px; white-space: nowrap; }
+    .byte-hex { font-size: 11px; color: var(--text); padding-left: 12px; white-space: nowrap; }
+    .byte-bin b { color: var(--accent); font-weight: normal; }
+
+    /* small adjacent grids (spacing figure) */
+    .adj-row { display: flex; justify-content: center; align-items: flex-start; gap: 40px; flex-wrap: wrap; }
+    .adj-cells { display: flex; }
+    .mini-grid { display: grid; grid-template-columns: repeat(8, 13px); }
+    .mini-grid + .mini-grid { border-left: 1px dashed #55555a; }
+    .mini-grid .px { width: 13px; height: 13px; border: none; }
+    .adj-label { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: center; margin-top: 10px; }
+
+    /* ---- attribute byte figure ---- */
+    .memcell { font-family: var(--mono); font-size: 13px; }
+    .cell-pair { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
+    .cell {
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 12px 16px; text-align: center; min-width: 140px; background: var(--bg);
+    }
+    .cell .val { color: var(--accent); font-size: 1.3em; }
+    .cell .lbl { color: var(--muted); margin-top: 6px; font-size: 0.85em; }
+    .attr-bits {
+      display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px;
+      margin: 20px auto 0; max-width: 560px;
+    }
+    .attr-bit { border: 1px solid var(--border); border-radius: 4px; padding: 8px 4px; text-align: center; background: var(--bg); }
+    .attr-bit .b { color: var(--text); }
+    .attr-bit .m { color: var(--muted); font-size: 0.72em; display: block; margin-top: 4px; line-height: 1.3; }
+    .attr-bit .v { color: var(--accent); font-size: 1.2em; display: block; margin-bottom: 4px; }
+    .attr-bit.blink { border-color: #b04747; }
+    .attr-bit.bgc   { border-color: #476bb0; }
+    .attr-bit.bright{ border-color: #b0a247; }
+    .attr-bit.fgc   { border-color: #47b061; }
+
+    .render-demo {
+      display: flex; align-items: center; justify-content: center;
+      gap: 28px; flex-wrap: wrap; margin-top: 28px;
+      font-family: var(--mono); font-size: 13px;
+    }
+    .render-demo .op { color: var(--muted); font-size: 1.6em; }
+    .render-label { color: var(--muted); text-align: center; margin-top: 8px; font-size: 0.85em; }
+    .mini-glyph { display: grid; grid-template-columns: repeat(8, 10px); }
+    .mini-glyph .mpx { width: 10px; height: 10px; }
+    .result-cell { padding: 8px; background: #0000AA; border-radius: 4px; }
+    @keyframes vga-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+    .blinking .mpx.fg { animation: vga-blink 1.06s step-end infinite; }
+
+    /* ---- glyph designer ---- */
+    #designer .px { cursor: pointer; }
+    #designer .px:hover { outline: 1px solid var(--accent); outline-offset: -1px; }
+    .designer-actions { text-align: center; margin-top: 18px; }
+    #designer-clear {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 18px;
+      cursor: pointer;
+    }
+    #designer-clear:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ---- DOS screen demos ---- */
+    .dos-screen {
+      font-family: var(--mono);
+      background: var(--dos-bg);
+      color: var(--dos-fg);
+      border-radius: 6px;
+      border: 2px solid #333;
+      padding: 22px 24px;
+      font-size: 20px;
+      line-height: 1.5;
+      min-height: 70px;
+    }
+    .dos-cell {
+      display: inline-block;
+      width: 1.15em;
+      text-align: center;
+      white-space: pre;
+    }
+    .dos-cell.cursor { position: relative; }
+    .dos-cell.cursor::after {
+      content: "";
+      position: absolute;
+      left: 8%; right: 8%; bottom: 2px;
+      height: 3px;
+      background: var(--dos-fg);
+      animation: vga-blink 1.06s step-end infinite;
+    }
+    .dos-field .dos-cell { background: #0000AA; color: #FFFFFF; }
+    .demo-label {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--accent);
+      margin-top: 14px;
+      min-height: 1.6em;
+    }
+    .demo-step { color: var(--muted); }
+
+    /* ---- video memory strip ---- */
+    .memstrip { font-family: var(--mono); font-size: 12px; }
+    .memstrip-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; }
+    .membyte {
+      border: 1px solid var(--border); border-radius: 4px;
+      padding: 8px 6px; min-width: 58px; text-align: center; background: var(--bg);
+    }
+    .membyte .mv { color: var(--accent); }
+    .membyte .ml { color: var(--muted); font-size: 0.8em; display: block; margin-top: 4px; }
+    .membyte.attr-b { border-color: #476bb0; }
+    .memstrip .formula {
+      text-align: center; color: var(--text); margin-top: 18px; font-size: 1.05em;
+    }
+    .memstrip .formula b { color: var(--accent); font-weight: normal; }
+
+    /* ---- connected letters figure ---- */
+    .join-demo {
+      display: flex; justify-content: center; align-items: stretch;
+      gap: 28px; flex-wrap: wrap; font-family: var(--mono);
+    }
+    .join-panel {
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--bg); padding: 16px 22px; text-align: center; min-width: 150px;
+    }
+    .join-panel .letters { font-size: 2.4em; line-height: 1.5; color: #FFFFFF; }
+    .join-panel .letters .changed { color: var(--accent); }
+    .join-panel .lbl { color: var(--muted); font-size: 11px; margin-top: 10px; line-height: 1.5; }
+    .join-arrow { align-self: center; color: var(--muted); font-size: 1.6em; }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================ NAV -->
+  <header class="nav" id="nav">
+    <div class="wrap nav__inner">
+      <a class="brand" href="/" aria-label="Babak Goshayeshi, home">
+        <span class="brand__mark"><img class="brand__logo" src="/assets/dragonfly_logo2.png" alt="" /></span>
+        Babak&nbsp;Goshayeshi<span style="color:var(--muted);font-weight:400">, Ph.D.</span>
+      </a>
+      <nav class="nav__links" id="navLinks" aria-label="Primary">
+        <a href="/#about">About</a>
+        <a href="/#ventures">Platforms</a>
+        <a href="/#work">Work</a>
+        <a href="/#experience">Experience</a>
+        <a href="/#contact">Contact</a>
+      </nav>
+      <div class="nav__cta">
+        <a class="nav__blog" href="/blog/">Blog</a>
+        <a class="btn btn--primary" href="/#contact">Get in touch</a>
+      </div>
+      <button class="nav__toggle" id="navToggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <article class="post">
+      <div class="wrap">
+
+        <header class="post__head reveal">
+          <p class="eyebrow">Retro computing · Systems programming</p>
+          <h1>Building a Farsi Font for MS-DOS</h1>
+          <p class="post__meta">August 6, 2026 ·
+            <a href="/blog/">← All posts</a></p>
+        </header>
+
+        <div class="post__content reveal">
+
+          <p>It was around 30 years ago, when I had just started high school. There was no MS Windows, and the best operating system (OS) was MS-DOS.</p>
+          <p>If you don't know what MS-DOS is, just open your terminal or Command Prompt and maximize the window. You will get a sense of the environment I am talking about, except that it could only display 80 characters per row and had 25 rows (a standard VGA text mode was 80 &times; 25). And that was it. When you started the computer, that was what you would see.</p>
+
+          <figure class="retro">
+            <img src="ms_dos_screenshot.png" alt="MS-DOS text mode screen" />
+          </figure>
+
+          <p>I was working on a project, designing a workflow management system for a medical lab, using <em><a href="https://en.wikipedia.org/wiki/FoxPro" target="_blank" rel="noopener">FoxPro</a></em>, the state-of-the-art programming language, with incredible database management and a shiny User Interface. The software made by <em>FoxPro</em> was everywhere, from banks to government offices.</p>
+
+          <p>While I was working on this project, one thing caught my attention: we didn&rsquo;t have a good, easy-to-use Farsi font for MS-DOS, something that being decent enough for my <em>FoxPro</em> project. I have to say, there was an MS-DOS Farsi font that most of the developed application were using, but it was so primitive and not elegant.</p>
+
+          <p>So, I embarked on a quest: how to develop a decent Farsi font for MS-DOS.</p>
+
+          <p>At that time, we didn&rsquo;t have the internet, so if you had a question, either you had to find someone who knew it and rely on their answer, or spend an enormous amount of time going through library books.</p>
+
+          <p>I asked around on how to do it, and finally someone knew!</p>
+
+          <div class="dialogue">
+            <p><span class="who">Him:</span> &ldquo;Your answer is in the OS reserved part of the RAM, where the shape of the characters is stored! If you change that, the shape of the characters changes!&rdquo;</p>
+            <p><span class="who">Me:</span> &ldquo;How can I change them?&rdquo;</p>
+            <p><span class="who">Him:</span> &ldquo;You must learn how to code in <em><a href="https://en.wikipedia.org/wiki/C_(programming_language)" target="_blank" rel="noopener">C</a></em> and work with <em><a href="https://en.wikipedia.org/wiki/Pointer_(computer_programming)" target="_blank" rel="noopener">pointers</a></em>, <em><a href="https://en.wikipedia.org/wiki/Processor_register" target="_blank" rel="noopener">registers</a></em>, and <em><a href="https://en.wikipedia.org/wiki/Interrupt" target="_blank" rel="noopener">interrupts</a></em>.&rdquo;</p>
+          </div>
+
+          <p>Too many keywords for a teenager!</p>
+
+          <p>But it was a fascinating concept: I could read and change any specific part of RAM! It was like giving a kid a flashlight in a dark room full of toys!</p>
+          <p>There was a bookstore next to my high school, and it had a very thick book on <em>C</em> programming (~5-6 inches thick). I bought it and started learning <em>C</em> from scratch.</p>
+          <p>I still remember the excitement I felt at that time. I already knew how to code in <em><a href="https://en.wikipedia.org/wiki/BASIC" target="_blank" rel="noopener">BASIC</a></em>, <em>FoxPro</em>, and some <em><a href="https://en.wikipedia.org/wiki/Pascal_(programming_language)" target="_blank" rel="noopener">Pascal</a></em>, but <em>C</em> was something different! I could  change the very fabric of how the computer operated. As Thanos once famously said, &ldquo;Reality can be whatever I want.&rdquo;</p>
+          <p>Although I don&rsquo;t have the code, as it is hopefully stored on a floppy disk, sitting in my parents' basement in Iran, I do remember some of the key concepts and challenges! Also, I have AI to help me navigate into my memory!</p>
+
+          <h2>Character Design</h2>
+
+          <p>First, let&rsquo;s have an understanding of how characters were displayed in the standard VGA text mode in MS-DOS:</p>
+
+          <h3>Shape</h3>
+
+          <p>Each character shape, or glyph, was represented by a 16 &times; 8 pixel bitmap. The bitmap consisted of 16 rows of 8 bit, a binary matrix 8 &times; 16 where, if the bit is 1, it was displaying the foreground color, while a bit set to <code>0</code> displayed the background color.</p>
+
+          <figure class="retro">
+            <div class="glyphs" id="glyphs"></div>
+            <figcaption>The 8&nbsp;&times;&nbsp;16 bitmaps for the characters
+            &ldquo;A&rdquo; and &ldquo;B&rdquo; from the standard IBM VGA font. Each of
+            the 16 rows is one byte; the binary and hexadecimal value of every row is
+            shown beside it. Bits set to 1 (lit pixels) are highlighted.</figcaption>
+          </figure>
+
+          <p class="post__note">Note: Every character also has another associated byte, which is technically its assigned name by the OS. For example, for &ldquo;A&rdquo;: &ldquo;0x41&rdquo; and &ldquo;B&rdquo;: &ldquo;0x42&rdquo;. For this project, I didn&rsquo;t need to change these. Continue reading; you will discover why this is important to know,</p>
+
+          <h3>Attributes</h3>
+
+          <p>A regular screen size in MS-DOS was 80 &times; 25 characters. For every character position on the screen, video memory stored two bytes: one byte representing the character code, and another representing its attributes. The attribute byte determined the foreground color, background color, brightness, and whether the character blinked.</p>
+
+          <p>One bit for blinking, 3 for foreground color, one bit for bright or not, and 3 again for background color.</p>
+
+          <figure class="retro memcell">
+            <div class="cell-pair">
+              <div class="cell">
+                <div class="val">0x41</div>
+                <div class="lbl">character code (&ldquo;A&rdquo;)</div>
+              </div>
+              <div class="cell">
+                <div class="val">0x9F</div>
+                <div class="lbl">attribute byte</div>
+              </div>
+            </div>
+            <div class="attr-bits">
+              <div class="attr-bit blink"><span class="v">1</span><span class="b">7</span><span class="m">blink: on</span></div>
+              <div class="attr-bit bgc"><span class="v">0</span><span class="b">6</span><span class="m">bg R</span></div>
+              <div class="attr-bit bgc"><span class="v">0</span><span class="b">5</span><span class="m">bg G</span></div>
+              <div class="attr-bit bgc"><span class="v">1</span><span class="b">4</span><span class="m">bg B</span></div>
+              <div class="attr-bit bright"><span class="v">1</span><span class="b">3</span><span class="m">bright: on</span></div>
+              <div class="attr-bit fgc"><span class="v">1</span><span class="b">2</span><span class="m">fg R</span></div>
+              <div class="attr-bit fgc"><span class="v">1</span><span class="b">1</span><span class="m">fg G</span></div>
+              <div class="attr-bit fgc"><span class="v">1</span><span class="b">0</span><span class="m">fg B</span></div>
+            </div>
+            <div class="render-demo">
+              <div>
+                <div class="mini-glyph" id="shape-only"></div>
+                <div class="render-label">shape<br>(font ROM, 16 bytes)</div>
+              </div>
+              <div class="op">+</div>
+              <div>
+                <div style="text-align:center; font-size:1.4em; color:var(--accent);">0x9F</div>
+                <div class="render-label">attributes<br>white fg &middot; blue bg<br>bright &middot; blinking</div>
+              </div>
+              <div class="op">=</div>
+              <div>
+                <div class="result-cell blinking"><div class="mini-glyph" id="rendered"></div></div>
+                <div class="render-label">on screen</div>
+              </div>
+            </div>
+            <figcaption>One screen position in video memory: a character-code byte
+            followed by an attribute byte. Here <code>0x9F</code> = binary
+            <code>1&nbsp;001&nbsp;1&nbsp;111</code>: blinking, blue background, bright
+            white foreground. The character shape itself never changes&mdash;the
+            hardware combines the glyph from font memory with the colors from the
+            attribute byte at display time.</figcaption>
+          </figure>
+
+          <p>The three color bits represented eight basic colors:</p>
+
+          <table class="colortable">
+            <tr><th>Value</th><th>Color</th></tr>
+            <tr><td>000</td><td>Black<span class="swatch" style="background:#000000"></span></td></tr>
+            <tr><td>001</td><td>Blue<span class="swatch" style="background:#0000AA"></span></td></tr>
+            <tr><td>010</td><td>Green<span class="swatch" style="background:#00AA00"></span></td></tr>
+            <tr><td>011</td><td>Cyan<span class="swatch" style="background:#00AAAA"></span></td></tr>
+            <tr><td>100</td><td>Red<span class="swatch" style="background:#AA0000"></span></td></tr>
+            <tr><td>101</td><td>Magenta<span class="swatch" style="background:#AA00AA"></span></td></tr>
+            <tr><td>110</td><td>Brown<span class="swatch" style="background:#AA5500"></span></td></tr>
+            <tr><td>111</td><td>Light gray<span class="swatch" style="background:#AAAAAA"></span></td></tr>
+          </table>
+
+          <p>For the foreground, setting the intensity bit produced the brighter versions:</p>
+
+          <table class="colortable">
+            <tr><th>Basic color</th><th>Bright version</th></tr>
+            <tr><td>Black<span class="swatch" style="background:#000000"></span></td><td>Dark gray<span class="swatch" style="background:#555555"></span></td></tr>
+            <tr><td>Blue<span class="swatch" style="background:#0000AA"></span></td><td>Light blue<span class="swatch" style="background:#5555FF"></span></td></tr>
+            <tr><td>Green<span class="swatch" style="background:#00AA00"></span></td><td>Light green<span class="swatch" style="background:#55FF55"></span></td></tr>
+            <tr><td>Cyan<span class="swatch" style="background:#00AAAA"></span></td><td>Light cyan<span class="swatch" style="background:#55FFFF"></span></td></tr>
+            <tr><td>Red<span class="swatch" style="background:#AA0000"></span></td><td>Light red<span class="swatch" style="background:#FF5555"></span></td></tr>
+            <tr><td>Magenta<span class="swatch" style="background:#AA00AA"></span></td><td>Light magenta<span class="swatch" style="background:#FF55FF"></span></td></tr>
+            <tr><td>Brown<span class="swatch" style="background:#AA5500"></span></td><td>Yellow<span class="swatch" style="background:#FFFF55"></span></td></tr>
+            <tr><td>Light gray<span class="swatch" style="background:#AAAAAA"></span></td><td>White<span class="swatch" style="background:#FFFFFF"></span></td></tr>
+          </table>
+
+          <p>Therefore, the foreground could use 16 colors, while the background normally had only 8 colors because the highest bit was reserved for blinking.</p>
+
+          <p class="post__note">Note: Each character has the same length, and in the screen the OS does not put any space between the characters. So in order to not let characters touch each other, the border columns must be left empty, with more room on the right side for Roman characters. For Farsi characters, as the writing direction is from right to left, more space must be on the left side.</p>
+
+          <figure class="retro">
+            <div class="adj-row">
+              <div>
+                <div class="adj-cells" id="adjacent-ab"></div>
+                <div class="adj-label">&ldquo;A&rdquo; and &ldquo;B&rdquo; in adjacent cells &mdash;<br>the empty rightmost column (tinted)<br>keeps the glyphs from touching</div>
+              </div>
+              <div>
+                <div class="adj-cells" id="adjacent-farsi"></div>
+                <div class="adj-label">hand-drawn &ldquo;آ&rdquo; and &ldquo;ب&rdquo; glyphs &mdash;<br>the empty columns are on the left,<br>and the &ldquo;ب&rdquo; stroke reaches the right edge<br>to join the letter before it</div>
+              </div>
+            </div>
+            <figcaption>Character cells sit flush against each other on screen (dashed
+            lines mark the cell boundaries), so the breathing room has to be designed
+            into the bitmap itself. The &ldquo;آ&rdquo; and &ldquo;ب&rdquo; shown here
+            are illustrative approximations of hand-designed Farsi glyphs.</figcaption>
+          </figure>
+
+          <h2>Text-Rendering Engine</h2>
+
+          <h3>1. In an input field</h3>
+
+          <p>In Farsi (Persian), text is written from right to left (RTL). The solution is to take control of the cursor and VGA memory!</p>
+
+          <p>A regular screen size in MS-DOS was 80 &times; 25 characters, and I know exactly where the cursor position was stored (The BIOS provided a video function for positioning the cursor.).</p>
+
+          <p>This was the easier scenario. I positioned the cursor at the right edge of the input field. After each keystroke, I displayed the appropriate Farsi glyph and moved the cursor one character position to the left.</p>
+
+          <p>In other words, the first character appeared at the far-right side of the field, and every subsequent character was placed immediately to its left. This allowed the text to grow naturally from right to left.</p>
+
+          <figure class="retro">
+            <div class="dos-screen">
+              <span style="color:#55FF55">Name:</span> <span class="dos-field" id="demo-field"></span>
+            </div>
+            <div class="demo-label" id="demo-field-label"></div>
+            <figcaption>Typing &ldquo;گشایشی&rdquo; into an input field. The cursor
+            starts at the right edge; each keystroke draws the glyph and moves the
+            cursor one cell to the left, so the text grows right-to-left.
+            (Animation repeats.)</figcaption>
+          </figure>
+
+          <h3>2. At the MS-DOS command prompt</h3>
+
+          <p>The MS-DOS command prompt <code>C:\&gt;</code> was fixed on the left side of the screen, and the standard DOS command-line editor expected characters to be entered and displayed from left to right.</p>
+
+          <p>For Farsi input, I wanted to keep the insertion point immediately to the right of the prompt. Whenever the user typed a new character, I shifted all the previously displayed Farsi characters one position to the right and inserted the new character at the fixed insertion point.</p>
+
+          <p>For example, To write <code>گشایشی</code>, the user will enter these:</p>
+
+<pre class="dos-text">C:\&gt; گ
+C:\&gt; شگ
+C:\&gt; اشگ
+C:\&gt; یاشگ
+C:\&gt; شیاشگ
+C:\&gt; یشیاشگ</pre>
+
+          <p>Although the characters appeared reversed when viewed from left to right, reading them in the correct right-to-left direction produced:</p>
+
+          <p class="big-farsi">گشایشی</p>
+
+          <p>To implement this behavior efficiently, I had to manipulate the VGA buffer directly.</p>
+
+          <figure class="retro">
+            <div class="dos-screen">
+              <span id="demo-prompt"></span>
+            </div>
+            <div class="demo-label" id="demo-prompt-label"></div>
+            <figcaption>The same word typed at the command prompt. The insertion
+            point (blinking cursor) stays fixed right after <code>C:\&gt;</code>;
+            every keystroke shifts the previously typed characters one cell to the
+            right and redraws them in their correct connected forms.
+            (Animation repeats.)</figcaption>
+          </figure>
+
+          <p>The screen consist of&nbsp; 80 &times; 25 character,&nbsp; and for each character we have two bytes: one byte for the character code (which we already designed and loaded) and another for its color and display attributes. Therefore, for shifting a character, it means we have to shift these two byte! So, I had to make sure that after each keystroke, it updated and redrew the command line, and returned the hardware cursor to the fixed insertion position immediately after the prompt.</p>
+
+          <figure class="retro memstrip">
+            <div class="memstrip-row">
+              <div class="membyte"><span class="mv">0x43</span><span class="ml">char &lsquo;C&rsquo;</span></div>
+              <div class="membyte attr-b"><span class="mv">0x07</span><span class="ml">attr</span></div>
+              <div class="membyte"><span class="mv">0x3A</span><span class="ml">char &lsquo;:&rsquo;</span></div>
+              <div class="membyte attr-b"><span class="mv">0x07</span><span class="ml">attr</span></div>
+              <div class="membyte"><span class="mv">0x5C</span><span class="ml">char &lsquo;\&rsquo;</span></div>
+              <div class="membyte attr-b"><span class="mv">0x07</span><span class="ml">attr</span></div>
+              <div class="membyte"><span class="mv">0x3E</span><span class="ml">char &lsquo;&gt;&rsquo;</span></div>
+              <div class="membyte attr-b"><span class="mv">0x07</span><span class="ml">attr</span></div>
+              <div class="membyte"><span class="mv">&hellip;</span><span class="ml">char</span></div>
+              <div class="membyte attr-b"><span class="mv">&hellip;</span><span class="ml">attr</span></div>
+            </div>
+            <div class="formula">byte offset of a cell &nbsp;=&nbsp; <b>(row &times; 80 + column) &times; 2</b></div>
+            <figcaption>The start of the VGA text buffer for a line reading
+            <code>C:\&gt;</code>. Every screen cell is a two-byte pair&mdash;character
+            code, then attribute&mdash;laid out row after row. Shifting a character
+            one cell means moving both of its bytes two positions over in this
+            buffer.</figcaption>
+          </figure>
+
+          <h3>Connected letters</h3>
+
+          <p>If you are not already scared by the complexity of the problem, this one is going to make you jump!</p>
+
+          <p>Farsi letters also change shape depending on their neighbors.</p>
+
+          <p>Suppose the user first typed:</p>
+
+          <p class="big-farsi">گ</p>
+
+          <p>At that point, it appeared as an isolated letter. After the user typed the next letter, the program might need to replace the first glyph with its connected form. Let&rsquo;s add an &ldquo;ش&rdquo;</p>
+
+          <p class="big-farsi">گش</p>
+
+          <figure class="retro">
+            <div class="join-demo">
+              <div class="join-panel">
+                <div class="letters">&#xFB92;</div>
+                <div class="lbl">user types &ldquo;گ&rdquo;<br>isolated glyph is drawn</div>
+              </div>
+              <div class="join-arrow">&rarr;</div>
+              <div class="join-panel">
+                <div class="letters"><span class="changed">&#xFB94;</span>&#xFEB6;</div>
+                <div class="lbl">user types &ldquo;ش&rdquo;<br>the &ldquo;گ&rdquo; is <span style="color:var(--accent)">redrawn</span> in its<br>connected form, then &ldquo;ش&rdquo; is placed</div>
+              </div>
+            </div>
+            <figcaption>A keystroke can change a glyph that is already on the screen:
+            when &ldquo;ش&rdquo; arrives, the isolated &ldquo;گ&rdquo; must be replaced
+            with its connected (initial) form before the new letter is drawn to its
+            left.</figcaption>
+          </figure>
+
+          <p>Technically, for &ldquo;گ&rdquo;, we need to add another hard-coded vector with the names of the specific characters whose shapes change from capital to lowercase when another character (not a space) is added right after them! And we redraw the neighbouring characters! Also, if you want to get creative,</p>
+
+          <h3>Special Combination</h3>
+
+          <p>While writing this article, I noticed that when adding &ldquo;ا&rdquo; after &ldquo;ل&rdquo; it changes both to a nicer (more calligraphic) version of writing these &ldquo;لا&rdquo;. FYI, if it does not apply this change, the shape will look like &ldquo;U&rdquo;.</p>
+
+          <figure class="retro">
+            <div class="join-demo">
+              <div class="join-panel">
+                <div class="letters">&#xFEDF; &#xFE8E;</div>
+                <div class="lbl">&ldquo;ل&rdquo; + joined normally<br>&mdash; the &ldquo;U&rdquo; look, two cells</div>
+              </div>
+              <div class="join-arrow">vs</div>
+              <div class="join-panel">
+                <div class="letters"><span class="changed">&#xFEFB;</span></div>
+                <div class="lbl">the &ldquo;لا&rdquo; ligature &mdash; a single,<br>more calligraphic glyph</div>
+              </div>
+            </div>
+            <figcaption>The lam-alef combination: joining the two letters cell by cell
+            produces the &ldquo;U&rdquo;-shaped form on the left, while a dedicated
+            ligature glyph gives the traditional &ldquo;&#xFEFB;&rdquo; form.</figcaption>
+          </figure>
+
+          <p>Implementing this in MS-DOS required defining another character's shape and use them when certain combinations happens. However, I can imagine that it was not as aesthetically appealing than it is now, because it will occupy two character block, rather than now that characters does not bound by a constant size for all.</p>
+
+          <details class="accordion">
+            <summary>What I Did Not Cover Here</summary>
+
+            <p>To keep this article short, there were other complexities that I didn't go through here!</p>
+
+            <h4>Handling Special Keystrokes</h4>
+
+            <p>Text input becomes more complicated when editing and navigation keys are involved. The program must update both the internal text buffer and the characters displayed on the screen.</p>
+
+            <ul>
+              <li><strong>Backspace:</strong> Deletes the character immediately before the current insertion point.</li>
+              <li><strong>Delete:</strong> Deletes the character at the current insertion point.</li>
+              <li><strong>Home and End:</strong> Move the insertion point to the beginning or end of the input field or line.</li>
+              <li><strong>Page Up and Page Down:</strong> Move through larger sections of text or between pages, depending on the application.</li>
+              <li><strong>Arrow keys:</strong> Move the insertion point between characters without deleting them.</li>
+            </ul>
+
+            <p>In a right-to-left input system, each of these operations requires additional logic because the visual direction of movement may differ from the order in which the characters are stored in memory.</p>
+
+            <h4>Numbers</h4>
+
+            <p>Although Persian text is written from right to left, numbers are  written and read from left to right. Therefore, a sequence of digits must be treated as a separate left-to-right segment within the surrounding right-to-left text.</p>
+
+            <h4>Mixing Farsi and English</h4>
+
+            <p>Combining Farsi and English creates a bidirectional-text problem. Farsi text flows from right to left, while English text flows from left to right. The program must identify each text segment, preserve its internal direction, and determine where it should appear relative to the surrounding text. Numbers, punctuation marks, spaces, and English abbreviations make this behavior even more complicated.</p>
+
+          </details>
+
+          <h2>Design Your Own Character</h2>
+
+          <p>I have did the font design in grid notebook, and a script in <em><a href="https://en.wikipedia.org/wiki/GW-BASIC" target="_blank" rel="noopener">GW-BASIC</a></em> that converted the binary to Hexadecimal code. This tool here is doing that.</p>
+
+          <p>Click the pixels to draw your own 8 &times; 16 glyph &mdash; the 16 row bytes update as you go, exactly as they would be stored in font memory.</p>
+
+          <figure class="retro">
+            <div class="glyphs">
+              <div class="glyph">
+                <div class="glyph-title">your glyph</div>
+                <div class="glyph-rows" id="designer"></div>
+              </div>
+            </div>
+            <div class="designer-actions"><button id="designer-clear">clear</button></div>
+            <figcaption>Each click flips one bit of that row&rsquo;s byte: a lit
+            (green) pixel is a <code>1</code>, an empty pixel is a <code>0</code>.
+            The 16 bytes on the right are the complete definition of your
+            character.</figcaption>
+          </figure>
+
+        </div>
+
+        <footer class="post__footer reveal">
+          <a class="btn btn--ghost" href="/blog/">← All posts</a>
+          <a class="btn btn--clay" href="/#contact">Get in touch <span class="arrow">→</span></a>
+        </footer>
+
+      </div>
+    </article>
+  </main>
+
+  <!-- ======================================================== FOOTER -->
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <span>© <span id="year">2026</span> Babak Goshayeshi, Ph.D. · San Diego, California</span>
+      <span>Built as a static site · hosted on GitHub Pages</span>
+    </div>
+  </footer>
+
+  <script>
+  // Row bytes of the standard IBM VGA 8x16 font glyphs.
+  const GLYPHS = {
+    "A": [0x00,0x00,0x10,0x38,0x6C,0xC6,0xC6,0xFE,0xC6,0xC6,0xC6,0xC6,0x00,0x00,0x00,0x00],
+    "B": [0x00,0x00,0xFC,0x66,0x66,0x66,0x7C,0x66,0x66,0x66,0x66,0xFC,0x00,0x00,0x00,0x00],
+    // Illustrative hand-drawn Farsi glyphs — left columns kept empty; the
+    // "beh" baseline reaches the right edge so it can join the previous letter.
+    "ALEF_MADDA": [0x02,0x3E,0x20,0x08,0x08,0x08,0x08,0x08,0x08,0x08,0x08,0x08,0x00,0x00,0x00,0x00],
+    "BEH":  [0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x41,0x7F,0x00,0x08,0x00,0x00,0x00,0x00]
+  };
+
+  // --- big A/B bitmaps with per-row bytes ---
+  const container = document.getElementById("glyphs");
+  for (const ch of ["A", "B"]) {
+    const rows = GLYPHS[ch];
+    const glyph = document.createElement("div");
+    glyph.className = "glyph";
+
+    const title = document.createElement("div");
+    title.className = "glyph-title";
+    title.textContent = `"${ch}"  (code 0x${ch.charCodeAt(0).toString(16).toUpperCase()})`;
+    glyph.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "glyph-rows";
+
+    for (const byte of rows) {
+      const row = document.createElement("div");
+      row.className = "glyph-row";
+      for (let bit = 7; bit >= 0; bit--) {
+        const px = document.createElement("div");
+        px.className = "px " + ((byte >> bit) & 1 ? "on" : "off");
+        row.appendChild(px);
+      }
+      const bin = document.createElement("span");
+      bin.className = "byte-bin";
+      bin.innerHTML = byte.toString(2).padStart(8, "0").replace(/1/g, "<b>1</b>");
+      row.appendChild(bin);
+
+      const hex = document.createElement("span");
+      hex.className = "byte-hex";
+      hex.textContent = "0x" + byte.toString(16).toUpperCase().padStart(2, "0");
+      row.appendChild(hex);
+
+      grid.appendChild(row);
+    }
+    glyph.appendChild(grid);
+    container.appendChild(glyph);
+  }
+
+  // --- small adjacent-cell grids for the spacing figure ---
+  function drawMiniGrid(parent, bytes, highlightCols) {
+    const g = document.createElement("div");
+    g.className = "mini-grid";
+    for (const byte of bytes) {
+      for (let bit = 7; bit >= 0; bit--) {
+        const col = 7 - bit;
+        const px = document.createElement("div");
+        const on = (byte >> bit) & 1;
+        px.className = "px " + (on ? "on" : (highlightCols.includes(col) ? "hl" : "off"));
+        g.appendChild(px);
+      }
+    }
+    parent.appendChild(g);
+  }
+  const adjAB = document.getElementById("adjacent-ab");
+  drawMiniGrid(adjAB, GLYPHS["A"], [7]);
+  drawMiniGrid(adjAB, GLYPHS["B"], [7]);
+  const adjFarsi = document.getElementById("adjacent-farsi");
+  drawMiniGrid(adjFarsi, GLYPHS["ALEF_MADDA"], [0]);
+  drawMiniGrid(adjFarsi, GLYPHS["BEH"], [0]);
+
+  // --- attribute example: shape + attributes = on screen ---
+  function drawMini(id, fg, bg) {
+    const el = document.getElementById(id);
+    for (const byte of GLYPHS["A"]) {
+      for (let bit = 7; bit >= 0; bit--) {
+        const px = document.createElement("div");
+        const on = (byte >> bit) & 1;
+        px.className = "mpx" + (on ? " fg" : "");
+        px.style.background = on ? fg : bg;
+        el.appendChild(px);
+      }
+    }
+  }
+  drawMini("shape-only", "#8a8a96", "transparent");
+  drawMini("rendered", "#FFFFFF", "#0000AA");
+
+  // --- DOS screen animations ---
+  // Arabic presentation forms, so every cell shows exactly the glyph the
+  // font program would draw (no automatic shaping by the browser).
+  const FA = {
+    gafIso:   "\uFB92", gafIni:   "\uFB94",
+    sheenFin: "\uFEB6", sheenMed: "\uFEB8",
+    alefFin:  "\uFE8E",
+    yehIso:   "\uFBFC", yehIni:   "\uFBFE", yehFin: "\uFBFD"
+  };
+
+  // Scenario 1: input field, cursor walks left from the right edge.
+  const FIELD_W = 10;
+  const fieldFrames = [
+    { cells: {},                                                            cur: 9, label: "cursor starts at the right edge of the field" },
+    { cells: {9: FA.gafIso},                                                cur: 8, label: "types \u201Cگ\u201D \u2014 glyph drawn, cursor moves one cell left" },
+    { cells: {8: FA.sheenFin, 9: FA.gafIni},                                cur: 7, label: "types \u201Cش\u201D \u2014 placed to the left of \u201Cگ\u201D" },
+    { cells: {7: FA.alefFin, 8: FA.sheenMed, 9: FA.gafIni},                 cur: 6, label: "types \u201Cا\u201D" },
+    { cells: {6: FA.yehIso, 7: FA.alefFin, 8: FA.sheenMed, 9: FA.gafIni},   cur: 5, label: "types \u201Cی\u201D \u2014 isolated, since \u201Cا\u201D does not connect forward" },
+    { cells: {5: FA.sheenFin, 6: FA.yehIni, 7: FA.alefFin, 8: FA.sheenMed, 9: FA.gafIni}, cur: 4, label: "types \u201Cش\u201D again" },
+    { cells: {4: FA.yehFin, 5: FA.sheenMed, 6: FA.yehIni, 7: FA.alefFin, 8: FA.sheenMed, 9: FA.gafIni}, cur: 3, label: "types \u201Cی\u201D \u2014 the field now reads \u201Cگشایشی\u201D" }
+  ];
+
+  function renderField(frame) {
+    const el = document.getElementById("demo-field");
+    el.innerHTML = "";
+    for (let i = 0; i < FIELD_W; i++) {
+      const c = document.createElement("span");
+      c.className = "dos-cell" + (i === frame.cur ? " cursor" : "");
+      c.textContent = frame.cells[i] || "\u00A0";
+      el.appendChild(c);
+    }
+    document.getElementById("demo-field-label").innerHTML =
+      "<span class='demo-step'>&#9654;</span> " + frame.label;
+  }
+
+  // Scenario 2: command prompt, fixed insertion point, cells shift right.
+  const promptFrames = [
+    { cells: [],                                              label: "cursor sits immediately after the prompt" },
+    { cells: [FA.gafIso],                                     label: "types \u201Cگ\u201D \u2014 drawn at the insertion point" },
+    { cells: [FA.sheenFin, FA.gafIni],                        label: "types \u201Cش\u201D \u2014 \u201Cگ\u201D shifts right, \u201Cش\u201D takes the insertion point" },
+    { cells: [FA.alefFin, FA.sheenMed, FA.gafIni],            label: "types \u201Cا\u201D \u2014 everything shifts right again" },
+    { cells: [FA.yehIso, FA.alefFin, FA.sheenMed, FA.gafIni], label: "types \u201Cی\u201D" },
+    { cells: [FA.sheenFin, FA.yehIni, FA.alefFin, FA.sheenMed, FA.gafIni], label: "types \u201Cش\u201D again" },
+    { cells: [FA.yehFin, FA.sheenMed, FA.yehIni, FA.alefFin, FA.sheenMed, FA.gafIni], label: "types \u201Cی\u201D \u2014 read right-to-left: \u201Cگشایشی\u201D" }
+  ];
+
+  function renderPrompt(frame) {
+    const el = document.getElementById("demo-prompt");
+    el.innerHTML = "";
+    for (const ch of "C:\\>") {
+      const c = document.createElement("span");
+      c.className = "dos-cell";
+      c.textContent = ch;
+      el.appendChild(c);
+    }
+    const cur = document.createElement("span");
+    cur.className = "dos-cell cursor";
+    cur.textContent = "\u00A0";
+    el.appendChild(cur);
+    for (const g of frame.cells) {
+      const c = document.createElement("span");
+      c.className = "dos-cell";
+      c.textContent = g;
+      el.appendChild(c);
+    }
+    document.getElementById("demo-prompt-label").innerHTML =
+      "<span class='demo-step'>&#9654;</span> " + frame.label;
+  }
+
+  function loopFrames(frames, render, stepMs, holdMs) {
+    let i = 0;
+    render(frames[0]);
+    (function next() {
+      i = (i + 1) % frames.length;
+      render(frames[i]);
+      setTimeout(next, i === frames.length - 1 ? holdMs : stepMs);
+    })();
+    // first frame also holds a moment before the loop above advances
+  }
+  setTimeout(() => loopFrames(fieldFrames, renderField, 1500, 3500), 800);
+  setTimeout(() => loopFrames(promptFrames, renderPrompt, 1500, 3500), 800);
+  renderField(fieldFrames[0]);
+  renderPrompt(promptFrames[0]);
+
+  // --- "Design Your Own Character" interactive grid ---
+  const dBytes = new Array(16).fill(0);
+  const dCells = [], dBins = [], dHexes = [];
+  const designer = document.getElementById("designer");
+
+  for (let r = 0; r < 16; r++) {
+    const row = document.createElement("div");
+    row.className = "glyph-row";
+    dCells[r] = [];
+    for (let col = 0; col < 8; col++) {
+      const bit = 7 - col;
+      const px = document.createElement("div");
+      px.addEventListener("click", () => {
+        dBytes[r] ^= (1 << bit);
+        updateDesignerRow(r);
+      });
+      row.appendChild(px);
+      dCells[r][col] = px;
+    }
+    const bin = document.createElement("span");
+    bin.className = "byte-bin";
+    row.appendChild(bin);
+    dBins[r] = bin;
+
+    const hex = document.createElement("span");
+    hex.className = "byte-hex";
+    row.appendChild(hex);
+    dHexes[r] = hex;
+
+    designer.appendChild(row);
+    updateDesignerRow(r);
+  }
+
+  function updateDesignerRow(r) {
+    const byte = dBytes[r];
+    for (let col = 0; col < 8; col++) {
+      dCells[r][col].className = "px " + ((byte >> (7 - col)) & 1 ? "on" : "off");
+    }
+    dBins[r].innerHTML = byte.toString(2).padStart(8, "0").replace(/1/g, "<b>1</b>");
+    dHexes[r].textContent = "0x" + byte.toString(16).toUpperCase().padStart(2, "0");
+  }
+
+  document.getElementById("designer-clear").addEventListener("click", () => {
+    for (let r = 0; r < 16; r++) { dBytes[r] = 0; updateDesignerRow(r); }
+  });
+  </script>
+
+  <script src="/script.js"></script>
+</body>
+</html>
