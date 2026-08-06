@@ -370,14 +370,15 @@
     <section id="contact" class="contact">
       <div class="wrap">
         <p class="eyebrow reveal" style="text-align:center">Let’s talk</p>
-        <p class="reveal">
-          If your team builds complex technical systems, scientific computing, AI platforms,
-          R&amp;D data, I would like to hear from you.
-        </p>
-        <div class="contact__actions reveal">
-          <a class="btn btn--clay" href="mailto:b.goshayeshi@gmail.com">Email me <span class="arrow">→</span></a>
-          <a class="btn btn--ghost" href="https://www.diphyx.com/" target="_blank" rel="noopener">Visit DiPhyx</a>
-        </div>
+        <form class="contact__form reveal" action="https://formsubmit.co/b.goshayeshi@gmail.com" method="POST">
+          <input type="hidden" name="_subject" value="New message from bgoshayeshi.com" />
+          <input type="hidden" name="_next" value="https://bgoshayeshi.com/#contact" />
+          <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" />
+          <input type="text" name="name" placeholder="Name" aria-label="Name" required />
+          <input type="email" name="email" placeholder="Email address" aria-label="Email address" required />
+          <textarea name="message" rows="5" placeholder="Message" aria-label="Message" required></textarea>
+          <button class="btn btn--clay" type="submit">Send message <span class="arrow">→</span></button>
+        </form>
         <div class="contact__links reveal">
           <a href="https://www.linkedin.com/in/bgoshayeshi/" target="_blank" rel="noopener">LinkedIn</a>
           <a href="https://scholar.google.com/citations?user=orPxOuMAAAAJ&hl=en" target="_blank" rel="noopener">Google Scholar</a>
