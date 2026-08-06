@@ -140,6 +140,8 @@
       overflow-x: auto;
       margin: 0 0 24px;
     }
+    /* box-drawing demos need tight lines so the ║ segments connect */
+    pre.dos-text--tight { line-height: 1.25; }
 
     /* ---- glyph bitmap figures ---- */
     .glyphs { display: flex; flex-wrap: wrap; gap: 48px; justify-content: center; }
@@ -366,6 +368,38 @@
           </figure>
 
           <p class="post__note">Note: Every character also has another associated byte, which is technically its assigned name by the OS. For example, for &ldquo;A&rdquo;: &ldquo;0x41&rdquo; and &ldquo;B&rdquo;: &ldquo;0x42&rdquo;. For this project, I didn&rsquo;t need to change these. Continue reading; you will discover why this is important to know,</p>
+          <details class="accordion">
+            <summary>Space Between Characters and Lines</summary>
+
+            <p>The space between characters and lines is already included in the character cell. This is useful: you can build fully connected shapes just by creating custom characters, or, for example, draw tables using the characters already defined in MS-DOS (there are 256 of them &mdash; <a href="https://en.wikipedia.org/wiki/Code_page_437" target="_blank" rel="noopener">code page 437</a>).</p>
+
+            <p>Here is an example of a table created using the pre-defined characters in MS-DOS:</p>
+
+<pre class="dos-text dos-text--tight">╔════════════════╦═══════╗
+║ Item           ║ Price ║
+╠════════════════╬═══════╣
+║ 5.25" floppy   ║ $0.50 ║
+║ C book (thick) ║ $25   ║
+╚════════════════╩═══════╝</pre>
+
+            <p>And these are the pre-defined characters used to draw it, with their codes:</p>
+
+            <table class="colortable">
+              <tr><th>Character</th><th>Hex</th><th>Decimal</th></tr>
+              <tr><td>═</td><td>0xCD</td><td>205</td></tr>
+              <tr><td>║</td><td>0xBA</td><td>186</td></tr>
+              <tr><td>╔</td><td>0xC9</td><td>201</td></tr>
+              <tr><td>╗</td><td>0xBB</td><td>187</td></tr>
+              <tr><td>╚</td><td>0xC8</td><td>200</td></tr>
+              <tr><td>╝</td><td>0xBC</td><td>188</td></tr>
+              <tr><td>╠</td><td>0xCC</td><td>204</td></tr>
+              <tr><td>╣</td><td>0xB9</td><td>185</td></tr>
+              <tr><td>╦</td><td>0xCB</td><td>203</td></tr>
+              <tr><td>╩</td><td>0xCA</td><td>202</td></tr>
+              <tr><td>╬</td><td>0xCE</td><td>206</td></tr>
+            </table>
+
+          </details>
 
           <h3>Attributes</h3>
 
