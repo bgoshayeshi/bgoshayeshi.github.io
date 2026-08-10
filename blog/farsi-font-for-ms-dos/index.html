@@ -203,7 +203,7 @@
     .blinking .mpx.fg { animation: vga-blink 1.06s step-end infinite; }
 
     /* ---- glyph designer ---- */
-    #designer .px { cursor: pointer; }
+    #designer .px { cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; }
     #designer .px:hover { outline: 1px solid var(--accent); outline-offset: -1px; }
     .designer-actions { text-align: center; margin-top: 18px; }
     #designer-clear {
@@ -892,10 +892,8 @@ C:\&gt; یشیاشگ</pre>
     for (let col = 0; col < 8; col++) {
       const bit = 7 - col;
       const px = document.createElement("div");
-      px.addEventListener("click", () => {
-        dBytes[r] ^= (1 << bit);
-        updateDesignerRow(r);
-      });
+      px.dataset.r = r;
+      px.dataset.bit = bit;
       row.appendChild(px);
       dCells[r][col] = px;
     }
@@ -921,6 +919,39 @@ C:\&gt; یشیاشگ</pre>
     dBins[r].innerHTML = byte.toString(2).padStart(8, "0").replace(/1/g, "<b>1</b>");
     dHexes[r].textContent = "0x" + byte.toString(16).toUpperCase().padStart(2, "0");
   }
+
+  // Drag to paint: press sets the mode (draw if the first cell was off,
+  // erase if it was on), then every cell swept over gets that same state.
+  let painting = false, paintOn = false;
+
+  function setDesignerCell(r, bit, on) {
+    const cur = (dBytes[r] >> bit) & 1;
+    if (cur === (on ? 1 : 0)) return;
+    dBytes[r] ^= (1 << bit);
+    updateDesignerRow(r);
+  }
+
+  designer.addEventListener("pointerdown", (e) => {
+    const px = e.target.closest("#designer .px");
+    if (!px) return;
+    e.preventDefault();
+    painting = true;
+    const r = +px.dataset.r, bit = +px.dataset.bit;
+    paintOn = !((dBytes[r] >> bit) & 1);
+    setDesignerCell(r, bit, paintOn);
+  });
+
+  designer.addEventListener("pointermove", (e) => {
+    if (!painting) return;
+    // elementFromPoint instead of e.target: touch pointers stay implicitly
+    // captured by the first cell, so the target never changes during a drag.
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const px = el && el.closest("#designer .px");
+    if (px) setDesignerCell(+px.dataset.r, +px.dataset.bit, paintOn);
+  });
+
+  window.addEventListener("pointerup", () => { painting = false; });
+  window.addEventListener("pointercancel", () => { painting = false; });
 
   document.getElementById("designer-clear").addEventListener("click", () => {
     for (let r = 0; r < 16; r++) { dBytes[r] = 0; updateDesignerRow(r); }
