@@ -734,11 +734,13 @@ One of the suggestions we came up with was to sort the particles by their cell i
 This approach introduces an additional sorting step, which itself has a computational cost.
 Also, our main simulations, which were coal particle combustion, were mostly very particle-dispersed simulations, which made it less likely for sorting by cell indices to yield significant memory coalescing benefits.
 </p>
-<p>
-However, if you are dealing with a particle-laden simulation, sorting the particles by cells can lead to significant improvements in memory coalescing and overall performance.
-The key is that you do not want to do the sorting at every timestep, but rather at intervals that balance sorting overhead with performance gains.
-A static equation for the sorting interval, determined at the initialization of the simulation, can be suggested as the following:
-</p>
+<details class="accordion">
+  <summary><strong>A sorting interval for particle-laden simulations</strong></summary>
+  <p>
+  However, if you are dealing with a particle-laden simulation, sorting the particles by cells can lead to significant improvements in memory coalescing and overall performance.
+  The key is that you do not want to do the sorting at every timestep, but rather at intervals that balance sorting overhead with performance gains.
+  A static equation for the sorting interval, determined at the initialization of the simulation, can be suggested as the following:
+  </p>
 
 <div class="eq">
   <span><var>C</var><sub><var>p</var>,0</sub><span class="op">=</span><span class="fn">max</span><span class="big">(</span><span
@@ -782,6 +784,7 @@ Particles are therefore sorted at:
   <span><var>k</var><span class="op">=</span><var>N</var><sub>sort</sub>,&ensp;2<var>N</var><sub>sort</sub>,&ensp;3<var>N</var><sub>sort</sub>,&ensp;&hellip;</span>
   <span class="eq-no">(3)</span>
 </div>
+</details>
 
 <p>
 I didn't have a chance/time to test this idea, as I moved to the next bottleneck in the simulation, which was radiation properties calculation (need another blog post).
