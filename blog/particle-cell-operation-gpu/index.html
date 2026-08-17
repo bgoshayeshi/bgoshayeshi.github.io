@@ -600,6 +600,38 @@
   Once the port was working, I profiled the kernels with <a href="https://docs.nvidia.com/cuda/profiler-users-guide/index.html#nvprof-overview" target="_blank" rel="noopener noreferrer">nvprof</a> and the <a href="https://developer.nvidia.com/nvidia-visual-profiler" target="_blank" rel="noopener noreferrer">NVIDIA Visual Profiler</a> (both since replaced by the Nsight tools). The metrics pointed at two problems: atomic contention in the scatter, and poor global-memory load efficiency in both operators.
 </p>
 
+<figure>
+  <div class="card">
+    <div class="viz-head">
+      <div>
+        <div class="panel-title">Scattered access, live</div>
+        <div class="panel-sub">each particle is one GPU thread; each line shows where in the mesh array its write lands right now</div>
+      </div>
+      <div class="viz-ctls">
+        <label>rows <input id="vz-rows" type="number" min="2" max="12" value="8"></label>
+        <label>cols <input id="vz-cols" type="number" min="2" max="12" value="8"></label>
+        <label>particles <input id="vz-np" type="number" min="2" max="36" value="16"></label>
+        <button class="viz-btn" id="viz-coalesce-toggle" type="button">Pause</button>
+      </div>
+    </div>
+    <svg id="viz-coalesce" class="diagram-svg" viewBox="0 0 1000 730" role="img"
+         aria-label="Animation: particles drift through a mesh (16 particles in an 8 by 8 mesh by default; mesh size and particle count are adjustable). Below, a row of particle memory slots and a row of mesh memory addresses. Lines connect each particle slot to the address of the cell it currently occupies; the lines cross and reshuffle as particles move, and turn orange when two particles share a cell.">
+      <text x="500" y="14" text-anchor="middle" class="svg-label" id="vz-toplabel"></text>
+      <g id="vz-cells"></g>
+      <g id="vz-grid" class="svg-grid" fill="none" stroke-width="1"></g>
+      <text x="500" y="557" text-anchor="middle" class="svg-label">particle array — one GPU thread per particle, in memory order</text>
+      <g id="vz-links"></g>
+      <g id="vz-pslots"></g>
+      <g id="vz-mem"></g>
+      <g id="vz-parts"></g>
+      <text x="500" y="703" text-anchor="middle" class="svg-label" id="vz-meshlabel"></text>
+      <text x="500" y="724" text-anchor="middle" class="svg-label" id="vz-readout"></text>
+    </svg>
+  </div>
+  <figcaption>Fig. 5 — Top: particles move through a mesh.
+    Bottom: particle memory order vs. mesh memory addresses.</figcaption>
+</figure>
+
 <h3>Atomic Operations</h3>
 <p>
 Using the simplified algorithm, it guarantees that each particle interacts with only one cell at a time.
@@ -711,7 +743,7 @@ The orange lines in Fig. 5 show the instances where we have multiple particles i
       </div>
     </div>
   </div>
-  <figcaption>Fig. 5 — The example from the text, drawn from the warp’s point of view. Left: if particles
+  <figcaption>Fig. 6 — The example from the text, drawn from the warp’s point of view. Left: if particles
   adjacent in memory (P₁, P₂, P₃) also sat in adjacent cells, their three cell reads would land on
   consecutive addresses (C₃, C₄, C₅) and the hardware would serve them with a single coalesced memory
   transaction. Right: with randomly placed particles, P₁ reads C₃ while its memory-neighbor P₂ reads C₅₀ and
