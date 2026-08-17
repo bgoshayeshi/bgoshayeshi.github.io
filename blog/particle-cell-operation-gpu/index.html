@@ -637,7 +637,7 @@
 Using the simplified algorithm, it guarantees that each particle interacts with only one cell at a time.
 However, we have multiple particles <strong>per cell</strong>. This means that in the P2C operation multiple particles can try to update the same cell simultaneously.
 In order to resolve this issue, atomic operations are required to ensure that updates to the same cell are performed safely and correctly.
-Using CUDA, I used atomicAdd(), and atomics serialize: threads writing to the same address wait on one another. 
+Using CUDA, I used <code><em>atomicAdd()</em></code>, and atomics serialize: threads writing to the same address wait on one another. 
 This may introduce a performance reduction, as threads must wait for one particle to finish updating the cell information, for the next particle (that is in the same cell) to apply the changes.
 The orange lines in Fig. 5 show the instances where we have multiple particles in a cell simultaneously, where atomic operations are necessary to ensure correct updates.
 </p>
