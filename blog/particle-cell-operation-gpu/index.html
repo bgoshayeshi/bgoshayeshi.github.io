@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Particle–Cell Operations Optimization: Algorithm, GPU &amp; CUDA | Babak Goshayeshi, Ph.D.</title>
+  <meta name="description" content="How we cut the cost of particle–cell coupling in a multiphysics CFD code — first by changing the algorithm, then by moving it to the GPU — and the challenges along the way." />
+  <meta name="author" content="Babak Goshayeshi" />
+  <link rel="canonical" href="https://bgoshayeshi.com/blog/particle-cell-operation-gpu/" />
+
+  <!-- Open Graph / LinkedIn -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Particle–Cell Operations Optimization: Algorithm, GPU &amp; CUDA" />
+  <meta property="og:description" content="How we cut the cost of particle–cell coupling in a multiphysics CFD code — first by changing the algorithm, then by moving it to the GPU — and the challenges along the way." />
+  <meta property="og:url" content="https://bgoshayeshi.com/blog/particle-cell-operation-gpu/" />
+  <meta property="og:image" content="https://bgoshayeshi.com/blog/particle-cell-operation-gpu/og-image.png" />
+  <meta property="og:image:width" content="2400" />
+  <meta property="og:image:height" content="1260" />
+  <meta property="article:published_time" content="2026-08-16" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://bgoshayeshi.com/blog/particle-cell-operation-gpu/og-image.png" />
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Particle–Cell Operations Optimization: Algorithm, GPU & CUDA",
+    "description": "How we cut the cost of particle–cell coupling in a multiphysics CFD code — first by changing the algorithm, then by moving it to the GPU — and the challenges along the way.",
+    "datePublished": "2026-08-16",
+    "url": "https://bgoshayeshi.com/blog/particle-cell-operation-gpu/",
+    "image": "https://bgoshayeshi.com/blog/particle-cell-operation-gpu/og-image.png",
+    "author": {
+      "@type": "Person",
+      "name": "Babak Goshayeshi",
+      "honorificSuffix": "Ph.D.",
+      "url": "https://bgoshayeshi.com/"
+    }
+  }
+  </script>
+
+  <style>
+    /* article layout */
+    .post { padding: 72px 0 84px; }
+    .post__head { max-width: 760px; margin: 0 auto 40px; }
+    .post__head h1 { font-size: clamp(30px, 4vw, 46px); margin: 0 0 18px; letter-spacing: -0.02em; }
+    .post__meta { font-family: var(--mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .post__meta a { color: var(--clay-deep); }
+
+    .post__content { max-width: 760px; margin: 0 auto; font-size: 17.5px; color: var(--ink-soft); }
+    .post__content h2 { font-size: 27px; margin: 44px 0 14px; color: var(--ink); }
+    .post__content h3 { font-size: 21px; margin: 34px 0 12px; color: var(--ink); }
+    .post__content h4 { font-size: 17px; margin: 26px 0 10px; color: var(--ink); }
+    .post__content p { margin: 0 0 20px; }
+    .post__content strong { color: var(--ink); font-weight: 600; }
+    .post__content em { color: var(--ink); }
+    .post__content ul { margin: 0 0 20px; padding-left: 22px; }
+    .post__content li { margin-bottom: 8px; }
+    .post__content a { color: var(--clay-deep); border-bottom: 1px solid var(--line-strong); padding-bottom: 1px; }
+    .post__content a:hover { border-color: var(--clay); }
+    .post__content code { font-family: var(--mono); font-size: 0.88em; background: var(--card); border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; }
+
+    .post__note {
+      border-left: 3px solid var(--clay); background: var(--paper-2);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 16px 20px; margin: 0 0 20px; font-size: 16px;
+    }
+
+    .post__footer { max-width: 760px; margin: 48px auto 0; padding-top: 28px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+
+    /* accordion */
+    details.accordion { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); padding: 0 22px; margin: 2.2em 0; }
+    details.accordion summary { cursor: pointer; font-family: var(--mono); font-size: 15px; color: var(--ink); padding: 16px 0; }
+    details.accordion summary::marker { color: var(--clay-deep); }
+    details.accordion summary:hover { color: var(--clay-deep); }
+    details.accordion[open] summary { border-bottom: 1px solid var(--line); }
+    details.accordion > p:last-of-type { margin-bottom: 1.4em; }
+
+    /* ================ article components ================
+       The charts, diagrams, and live visual keep their original class names
+       and variable hooks; the tokens below map them onto the site palette.
+       The blue ordinal ramp / diagram blues are data colors, kept distinct
+       from the site's clay accent. */
+    .post, .tooltip {
+      --surface-1:      var(--card);
+      --text-primary:   var(--ink);
+      --text-secondary: var(--ink-soft);
+      --text-muted:     var(--muted);
+      --grid:           var(--line);
+      --axis:           var(--line-strong);
+      --border:         var(--line);
+      --code-bg:        var(--paper-2);
+      --accent:         #2a78d6;
+      --ord-1:          #86b6ef;   /* ppc 0.1 */
+      --ord-2:          #2a78d6;   /* ppc 1   */
+      --ord-3:          #104281;   /* ppc 10  */
+      --diagram-fill:   #9ec5f4;
+      --diagram-strong: #2a78d6;
+      --collide:        #eb6834;
+    }
+
+    .post__content pre {
+      font-family: var(--mono);
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0 0 20px;
+    }
+    .post__content pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+
+    figure { margin: 28px 0; }
+    figcaption { font-family: var(--mono); font-size: 12.5px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 18px;
+    }
+    .panel-pair { display: flex; flex-wrap: wrap; gap: 18px; }
+    .panel-pair > div { flex: 1 1 300px; min-width: 0; }
+    .panel-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+    .panel-sub { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .chart-svg { width: 100%; height: auto; display: block; }
+
+    .legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 10px 2px 0; font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft); }
+    .legend .key { display: inline-flex; align-items: center; gap: 6px; }
+    .legend .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+    .tooltip {
+      position: fixed; pointer-events: none; z-index: 60;
+      background: var(--card); color: var(--ink);
+      border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+      box-shadow: 0 12px 30px -14px rgba(40,30,20,.4);
+      padding: 8px 11px; font-size: 13px; line-height: 1.45;
+      opacity: 0; transition: opacity .12s;
+    }
+    .tooltip .tt-val { font-weight: 600; }
+
+    .card details { margin-top: 14px; font-size: 14px; }
+    .card summary { cursor: pointer; font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+    .card summary:hover { color: var(--clay-deep); }
+    .card table { border-collapse: collapse; margin-top: 10px; width: 100%; font-family: var(--mono); font-size: 12.5px; }
+    .card th, .card td {
+      text-align: right; padding: 5px 10px;
+      border-bottom: 1px solid var(--line);
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-soft);
+    }
+    .card th:first-child, .card td:first-child { text-align: left; }
+    .card th { color: var(--muted); font-weight: 500; }
+
+    .sim-video { width: 100%; height: auto; display: block; border-radius: var(--radius-sm); background: #000; }
+
+    .code-compare {
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px;
+      width: min(1080px, calc(100vw - 2.5rem));
+      margin: 0 0 20px 50%; transform: translateX(-50%);
+    }
+    .code-compare pre { margin: 8px 0 0; font-size: 11px; }
+    .code-compare > div:last-child { display: flex; flex-direction: column; justify-content: center; }
+    .code-arrow {
+      align-self: center; font-size: 2.1rem; line-height: 1;
+      color: var(--muted); user-select: none;
+    }
+    .code-badge { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    @media (max-width: 900px) {
+      .code-compare { grid-template-columns: 1fr; width: auto; margin-left: 0; transform: none; }
+      .code-arrow { justify-self: center; transform: rotate(90deg); }
+    }
+
+    .diagram-svg { width: 100%; height: auto; display: block; }
+    .svg-ink       { stroke: var(--ink-soft); }
+    .svg-grid      { stroke: var(--axis); }
+    .chip          { fill: var(--code-bg); stroke: var(--axis); }
+    .mem-cell      { fill: none; stroke: var(--axis); }
+    .mem-touched   { fill: var(--diagram-fill); fill-opacity: .45; stroke: var(--axis); }
+    .mem-contended { fill: var(--collide); fill-opacity: .22; stroke: var(--collide); }
+    .txn-band      { fill: var(--accent); opacity: .35; }
+    .svg-label     { fill: var(--muted); font: 12px var(--sans); }
+    .svg-label-strong { fill: var(--ink); font: 600 12px var(--sans); }
+
+    /* live coalescing visual */
+    .vz-cell-on  { fill: var(--diagram-fill); opacity: .28; }
+    .vz-cell-hot { fill: var(--collide); opacity: .20; }
+    .vz-link     { fill: none; stroke: var(--diagram-strong); stroke-width: 1.4; opacity: .55; }
+    .vz-link.hot { stroke: var(--collide); opacity: .8; }
+    .vz-p        { fill: var(--diagram-strong); }
+    .vz-p.hot    { fill: var(--collide); }
+    .vz-plabel   { fill: var(--muted); font: 9px var(--mono); }
+
+    /* display equations */
+    .eq {
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      margin: 1.3rem 0; padding: 0 3.2em;
+      font-family: "STIX Two Math", "Cambria Math", "Times New Roman", Georgia, serif;
+      font-size: 1.12em; color: var(--ink);
+      overflow-x: auto;
+    }
+    .eq .eq-no {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      color: var(--muted);
+      font: 12.5px/1 var(--mono);
+    }
+    .eq var, .mvar {
+      font-family: "STIX Two Math", "Cambria Math", "Times New Roman", Georgia, serif;
+      font-style: italic;
+    }
+    .eq sub { font-size: .68em; font-style: normal; }
+    .eq .op { padding: 0 .3em; }
+    .eq .fn { font-style: normal; }
+    .eq .big { font-size: 1.45em; font-weight: 300; line-height: 1; vertical-align: middle; }
+    .eq .frac {
+      display: inline-flex; flex-direction: column; align-items: center;
+      margin: 0 .18em; text-align: center; vertical-align: middle;
+    }
+    .eq .frac .num, .eq .frac .den { padding: .05em .3em; line-height: 1.25; }
+    .eq .frac .den { border-top: 1px solid currentColor; }
+
+    .viz-head    { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .viz-btn {
+      font: 500 12px var(--mono);
+      color: var(--ink); background: var(--paper-2);
+      border: 1px solid var(--line-strong); border-radius: 6px;
+      padding: 4px 12px; cursor: pointer; flex: none;
+      transition: border-color .2s ease, color .2s ease;
+    }
+    .viz-btn:hover { color: var(--clay-deep); border-color: var(--clay); }
+    .viz-ctls {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      font-family: var(--mono); font-size: 12px; color: var(--muted); flex: none;
+    }
+    .viz-ctls label { display: inline-flex; align-items: center; gap: 5px; }
+    .viz-ctls input {
+      width: 3.4em; font: inherit; color: var(--ink);
+      background: var(--paper-2); border: 1px solid var(--line-strong);
+      border-radius: 6px; padding: 2px 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================ NAV -->
+  <header class="nav" id="nav">
+    <div class="wrap nav__inner">
+      <a class="brand" href="/" aria-label="Babak Goshayeshi, home">
+        <span class="brand__mark"><img class="brand__logo" src="/assets/dragonfly_logo2.png" alt="" /></span>
+        Babak&nbsp;Goshayeshi<span style="color:var(--muted);font-weight:400">, Ph.D.</span>
+      </a>
+      <nav class="nav__links" id="navLinks" aria-label="Primary">
+        <a href="/#about">About</a>
+        <a href="/#ventures">Platforms</a>
+        <a href="/#work">Work</a>
+        <a href="/#experience">Experience</a>
+        <a href="/#contact">Contact</a>
+      </nav>
+      <div class="nav__cta">
+        <a class="nav__blog" href="/blog/">Blog</a>
+        <a class="btn btn--primary" href="/#contact">Get in touch</a>
+      </div>
+      <button class="nav__toggle" id="navToggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <article class="post">
+      <div class="wrap">
+
+        <header class="post__head reveal">
+          <h1>Particle–Cell Operations Optimization: Algorithm, GPU &amp; CUDA</h1>
+          <p class="post__meta">August 16, 2026 ·
+            <a href="/blog/">← All posts</a></p>
+        </header>
+
+        <div class="post__content">
+
+<p>Years ago, I was working on the <a href="https://uintah.sci.utah.edu/">Uintah software</a> (a large-scale multiphysics simulation framework
+   developed at the University of Utah). My focus was on optimizing the performance of the software by
+   code profiling, locating the bottlenecks and improving the performance. One of the main bottlenecks I identified was
+   the particle–cell coupling, which is the essential part of the two-way interaction between the
+   Lagrangian particle phase and the Eulerian gas phase. We presented this work at multiple conferences
+   (SIAM CSE 2017 &amp; <a href="https://www.siam.org/meetings/nc17">NC 2017</a>), however, never published a full article on it. This is a draft on how we
+   approached the Particle-Cell operation problem and addressed it.</p>
+
+<h2>Background: Uintah Software</h2>
+<p>
+  The Uintah Computational Framework is an open-source, massively parallel software suite designed for
+  simulating complex fluid-structure interaction, combustion, and fracture mechanics on supercomputers.
+  Originally funded by the Department of Energy, it manages automated load balancing and asynchronous
+  task execution across hundreds of thousands of CPU and GPU cores.
+</p>
+<p>
+  We designed our own plugin named "Wasatch" for gas
+  and particle simulation. For the gas phase, we used Eulerian methods, while the particle phase was treated
+  in a Lagrangian manner. We used two-way coupling, meaning gas phase and particle phase influence each other
+  reciprocally. But, particles do not interact with each other, as in our simulation the particle-particle
+  interaction is negligible.
+</p>
+<p>
+  After heavy code profiling, I identified multiple places that were slowing down the simulation, and a
+  couple of them were easy targets for optimization, and particle-cell interaction was one of them!
+</p>
+
+<h2>Simplifying Particle-Cell Interaction</h2>
+<p>In every time step, the simulation must do these calculations:</p>
+<ul>
+  <li>
+    <strong>Interacting Particles and Cells:</strong>
+    The first step is to identify which particles are interacting with which gas-phase cells,
+    meaning determining the spatial location of each particle and mapping it to the corresponding
+    cell in the computational grid.
+  </li>
+  <li>
+    <strong>Particle-to-Cell (P2C):</strong>
+    This means the source terms that particles release (or absorb) into the given gas-phase cells.
+    For example, in our coal particle combustion simulation, particles release heat and combustion
+    products (CO, CO<sub>2</sub>) into surrounding gas-phase cells.
+  </li>
+  <li>
+    <strong>Cell-to-Particle (C2P):</strong>
+    This means the impact of gas-phase cells on interacting particles.
+    For example, in our coal particle combustion simulation, gas-phase cells affect the motion
+    (drag) and heating of the particles.
+  </li>
+</ul>
+
+<p>
+  Technically, in every time step, in addition to the conservation equations which we are solving for gas and particles,
+   the code must account for the interactions between particles and gas cells, which is incorporated in the source terms.
+</p>
+
+<p class="post__note">
+  <strong>Note:</strong> In our code, we used <code>two-way coupling</code>, meaning that gas has an impact on particles,
+  particles have an impact on cells, and there is no particle-particle interaction.
+</p>
+
+<p>
+  To make “every particle” concrete, here is one of the simulations from the original talk. This is what the
+  particle phase actually looks like: a cloud of Lagrangian particles carried through the domain by the gas,
+  their positions evolving every time step:
+</p>
+
+<figure>
+  <div class="card">
+    <div class="panel-pair">
+      <div>
+        <div class="panel-title">Coal-boiler simulation</div>
+        <div class="panel-sub">fuel particles carried through the boiler, colored by particle velocity</div>
+        <video class="sim-video" autoplay muted loop playsinline controls preload="metadata"
+               poster="assets/coal-boiler-pvel-poster.jpg" style="aspect-ratio: 372 / 480; max-width: 420px; margin: 0 auto;"
+               aria-label="Simulation of a coal boiler with a cloud of fuel particles carried through the domain, colored by particle velocity.">
+          <source src="assets/coal-boiler-pvel.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </div>
+  <figcaption>Fig. 1 — A coal-boiler simulation with fuel particles carried through the boiler, colored by particle velocity.</figcaption>
+</figure>
+
+<h2>Particle-Cell Interaction</h2>
+<p>
+  The original code, and the most scientifically accurate approach, is <strong>volume-weighted interpolation</strong>: a particle sitting between
+  cells distributes its contribution in proportion to how much of its volume lies in each cell.
+</p>
+
+<figure>
+  <div class="card">
+    <svg class="diagram-svg" viewBox="0 0 640 250" role="img"
+         aria-label="Left: a particle overlapping four cells, its contribution split by overlap volume. Right: the same particle assigned entirely to the single cell containing its center.">
+      <!-- left panel: exact interpolation -->
+      <g>
+        <text x="130" y="20" text-anchor="middle" class="svg-label-strong">Exact: volume-weighted</text>
+        <!-- 4x3 grid -->
+        <g class="svg-grid" fill="none" stroke-width="1">
+          <rect x="20" y="40" width="220" height="165"/>
+          <line x1="75"  y1="40" x2="75"  y2="205"/>
+          <line x1="130" y1="40" x2="130" y2="205"/>
+          <line x1="185" y1="40" x2="185" y2="205"/>
+          <line x1="20"  y1="95" x2="240" y2="95"/>
+          <line x1="20"  y1="150" x2="240" y2="150"/>
+        </g>
+        <!-- shaded overlap cells, weights by overlap -->
+        <rect x="77"  y="97"  width="51" height="51" fill="var(--diagram-fill)" opacity="0.85"/>
+        <rect x="132" y="97"  width="51" height="51" fill="var(--diagram-fill)" opacity="0.45"/>
+        <rect x="77"  y="152" width="51" height="51" fill="var(--diagram-fill)" opacity="0.55"/>
+        <rect x="132" y="152" width="51" height="51" fill="var(--diagram-fill)" opacity="0.25"/>
+        <!-- particle -->
+        <circle cx="126" cy="146" r="16" fill="none" stroke="var(--text-primary)" stroke-width="1.6"/>
+        <circle cx="126" cy="146" r="2.6" fill="var(--text-primary)"/>
+        <text x="130" y="228" text-anchor="middle" class="svg-label">weights = overlap volume per cell</text>
+      </g>
+      <!-- right panel: approximate -->
+      <g>
+        <text x="510" y="20" text-anchor="middle" class="svg-label-strong">Approximate: nearest cell</text>
+        <g class="svg-grid" fill="none" stroke-width="1">
+          <rect x="400" y="40" width="220" height="165"/>
+          <line x1="455" y1="40" x2="455" y2="205"/>
+          <line x1="510" y1="40" x2="510" y2="205"/>
+          <line x1="565" y1="40" x2="565" y2="205"/>
+          <line x1="400" y1="95" x2="620" y2="95"/>
+          <line x1="400" y1="150" x2="620" y2="150"/>
+        </g>
+        <rect x="457" y="97" width="51" height="51" fill="var(--diagram-fill)" opacity="0.85"/>
+        <circle cx="506" cy="146" r="16" fill="none" stroke="var(--text-primary)" stroke-width="1.6"/>
+        <circle cx="506" cy="146" r="2.6" fill="var(--text-primary)"/>
+        <text x="510" y="228" text-anchor="middle" class="svg-label">everything goes to the cell holding the center</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption>Fig. 2 — The two particle–cell coupling algorithms. The exact method splits a particle’s
+  contribution across every cell it touches; the approximate method assigns it all to the one cell
+  containing the particle’s center.</figcaption>
+</figure>
+
+
+<p>
+  However, given the fact that the particle size is much smaller than the cell size (0.1x), it is reasonable
+  to assume that each particle interacts with only the cell that its center is located in. This assumption
+  has no or negligible impact on the accuracy of the simulation while significantly reducing the
+  computational cost and code complexity.
+</p>
+<p>
+  Code complexity is a very important factor, because if we want to move the computation to GPU, as we will
+  do in the next section, the simpler algorithm will reduce the chance of divergence.
+</p>
+
+<div class="code-compare">
+  <div>
+    <div class="panel-title">Exact volume-weighted interpolation — original</div>
+    <div class="code-badge">bounding box + per-cell overlap volumes, triple-nested loop</div>
+<pre><code>for( ; isrc != ise; ++ipx, ++ipy, ++ipz, ++ipsize, ++isrc ){
+
+  const double rp = *ipsize * 0.5;
+
+  // Identify the location of the particle boundary
+  // (assuming that it is a cube)
+  const double pxlo = px_ ? *ipx - rp : 0;
+  const double pylo = py_ ? *ipy - rp : 0;
+  const double pzlo = pz_ ? *ipz - rp : 0;
+
+  const double pxhi = px_ ? pxlo + *ipsize : 0;
+  const double pyhi = py_ ? pylo + *ipsize : 0;
+  const double pzhi = pz_ ? pzlo + *ipsize : 0;
+
+  const int ixlo = ( pxlo - xloface ) / dx_;
+  const int iylo = ( pylo - yloface ) / dy_;
+  const int izlo = ( pzlo - zloface ) / dz_;
+
+  // hi indices are 1 past the end
+  const int ixhi = px_ ? std::min( nmax[0], int(( pxhi - xloface ) / dx_) + 1 ) : ixlo+1;
+  const int iyhi = py_ ? std::min( nmax[1], int(( pyhi - yloface ) / dy_) + 1 ) : iylo+1;
+  const int izhi = pz_ ? std::min( nmax[2], int(( pzhi - zloface ) / dz_) + 1 ) : izlo+1;
+
+  const double pvol = (px_ ? 2*rp : 1)
+  * (py_ ? 2*rp : 1)
+  * (pz_ ? 2*rp : 1);
+  for( int k=izlo; k&lt;izhi; ++k ){
+    const double zcm = zloface + k*dz_;
+    const double zcp = zcm + dz_;
+    // determine the z bounding box for the particle in this cell
+    const double zcont = pz_ ? std::min(zcp,pzhi) - std::max(zcm,pzlo) : 1;
+    for( int j=iylo; j&lt;iyhi; ++j ){
+      const double ycm = yloface + j*dy_;
+      const double ycp = ycm + dy_;
+      // determine the y bounding box for the particle in this cell
+      const double ycont = py_ ? std::min(ycp,pyhi) - std::max(ycm,pylo) : 1;
+      for( int i=ixlo; i&lt;ixhi; ++i ){
+        const double xcm = xloface + i*dx_;
+        const double xcp = xcm + dx_;
+        const double xcont = px_ ? std::min(xcp,pxhi) - std::max(xcm,pxlo) : 1;
+        // contribution is the fraction of the particle volume in this cell.
+        const double contribution = xcont*ycont*zcont / pvol;
+        dest(i,j,k) += *isrc * contribution;
+      }
+    }
+  }
+} // particle loop</code></pre>
+  </div>
+  <div class="code-arrow" aria-hidden="true">&rarr;</div>
+  <div>
+    <div class="panel-title">Nearest-cell approximation — new</div>
+    <div class="code-badge">three index computations and one accumulate</div>
+<pre><code>for( ; isrc != ise; ++ipx, ++ipy, ++ipz, ++isrc ){
+  const int i = ( *ipx - xloface ) / dx_;
+  const int j = ( *ipy - yloface ) / dy_;
+  const int k = ( *ipz - zloface ) / dz_;
+  dest(i,j,k) += *isrc;
+} // particle loop</code></pre>
+  </div>
+</div>
+<p>
+  Simplifying the particle–cell operators to this nearest-cell approximation yields roughly a
+  <strong>2× speedup on CPU</strong>.
+</p>
+
+<figure>
+  <div class="card">
+    <div class="panel-pair">
+      <div>
+        <div class="panel-title">Particle&thinsp;→&thinsp;cell (scatter)</div>
+        <div class="panel-sub">Speedup of approximate vs. exact algorithm, CPU</div>
+        <svg id="chart-algo-p2c" class="chart-svg" viewBox="0 0 340 240" role="img"
+             aria-label="Grouped bar chart of particle-to-cell speedup from the nearest-cell approximation, by mesh size and particles per cell. Values in the data table below."></svg>
+      </div>
+      <div>
+        <div class="panel-title">Cell&thinsp;→&thinsp;particle (gather)</div>
+        <div class="panel-sub">Speedup of approximate vs. exact algorithm, CPU</div>
+        <svg id="chart-algo-c2p" class="chart-svg" viewBox="0 0 340 240" role="img"
+             aria-label="Grouped bar chart of cell-to-particle speedup from the nearest-cell approximation, by mesh size and particles per cell. Values in the data table below."></svg>
+      </div>
+    </div>
+    <div class="legend" data-legend></div>
+    <details>
+      <summary>Data table</summary>
+      <table>
+        <thead>
+          <tr><th>Mesh</th><th>P2C, ppc 0.1</th><th>P2C, ppc 1</th><th>P2C, ppc 10</th><th>C2P, ppc 0.1</th><th>C2P, ppc 1</th><th>C2P, ppc 10</th></tr>
+        </thead>
+        <tbody data-table-for="chart-algo-p2c,chart-algo-c2p"></tbody>
+      </table>
+    </details>
+  </div>
+  <figcaption>Fig. 3 — Speedup of the nearest-cell approximation over exact volume-weighted interpolation on
+  CPU, with randomly distributed particles (values digitized from the original talk figures). The hairline at
+  1× marks parity with the exact algorithm.</figcaption>
+</figure>
+
+<p>
+  Two patterns in this data are worth noting. The gather starts near <strong>2.6–2.8×</strong> on small
+  meshes but drifts down toward <strong>1.7×</strong> at 128³: as the mesh grows the cost is dominated less
+  by the arithmetic the approximation eliminates and more by memory access, which it doesn’t change. And for
+  the scatter, more particles per cell means more speedup — the exact method’s overlap computation is
+  per-particle work that the approximation removes entirely. That growing role of memory access foreshadowed
+  the real fight on the GPU.
+</p>
+
+<h2>GPU Implementation</h2>
+<p>
+  With the simplified algorithm implemented and tested, the next step was to move both operators (P2C and C2P) onto the GPU. The benchmarks
+  below are measured on cubic meshes from 16³ to 128³ cells, with particles <em>randomly distributed</em> in
+  the domain, as they are in a real simulation, at average loadings of 0.1, 1, and 10 particles per cell
+  (ppc). Speedup is GPU time versus a single CPU core, for the approximate method on both sides.
+</p>
+
+<figure>
+  <div class="card">
+    <div class="panel-pair">
+      <div>
+        <div class="panel-title">Particle&thinsp;→&thinsp;cell (scatter)</div>
+        <div class="panel-sub">GPU speedup vs. CPU</div>
+        <svg id="chart-p2c" class="chart-svg" viewBox="0 0 340 240" role="img"
+             aria-label="Grouped bar chart of particle-to-cell GPU speedup by mesh size and particles per cell. Values in the data table below."></svg>
+      </div>
+      <div>
+        <div class="panel-title">Cell&thinsp;→&thinsp;particle (gather)</div>
+        <div class="panel-sub">GPU speedup vs. CPU</div>
+        <svg id="chart-c2p" class="chart-svg" viewBox="0 0 340 240" role="img"
+             aria-label="Grouped bar chart of cell-to-particle GPU speedup by mesh size and particles per cell. Values in the data table below."></svg>
+      </div>
+    </div>
+    <div class="legend" data-legend></div>
+    <details>
+      <summary>Data table</summary>
+      <table>
+        <thead>
+          <tr><th>Mesh</th><th>P2C, ppc 0.1</th><th>P2C, ppc 1</th><th>P2C, ppc 10</th><th>C2P, ppc 0.1</th><th>C2P, ppc 1</th><th>C2P, ppc 10</th></tr>
+        </thead>
+        <tbody data-table-for="chart-p2c,chart-c2p"></tbody>
+      </table>
+    </details>
+  </div>
+  <figcaption>Fig. 4 — Measured GPU speedup of the two particle–cell operators (approximate method, randomly
+  distributed particles). The hairline at 1× marks parity with the CPU. Gather (C2P) reaches ≈&thinsp;41× at
+  128³; scatter (P2C) tops out lower because of atomic operations.</figcaption>
+</figure>
+
+<p>
+  Three things stand out in the data:
+</p>
+<ul>
+  <li><strong>Small problems don’t pay for the GPU.</strong> At 16³ with 0.1 ppc the GPU is actually
+      <em>slower</em> than the CPU (0.3–0.4×) — there simply isn’t enough work to amortize kernel launch and
+      keep the device occupied. The crossover comes quickly: by 64³ every configuration is 10× or better.</li>
+  <li><strong>Speedup grows with work.</strong> More cells and more particles per cell both push the numbers
+      up, peaking around 33–41× for the largest workloads.</li>
+  <li><strong>Scatter consistently trails gather.</strong> At 128³ C2P reaches ≈&thinsp;41× while P2C peaks
+      around 15–22×. That gap is structural, and worth unpacking.</li>
+</ul>
+
+<h2>The challenges</h2>
+<figure>
+  <div class="card">
+    <div class="viz-head">
+      <div>
+        <div class="panel-title">Scattered access, live</div>
+        <div class="panel-sub">each particle is one GPU thread; each line shows where in the mesh array its write lands right now</div>
+      </div>
+      <div class="viz-ctls">
+        <label>rows <input id="vz-rows" type="number" min="2" max="12" value="8"></label>
+        <label>cols <input id="vz-cols" type="number" min="2" max="12" value="8"></label>
+        <label>particles <input id="vz-np" type="number" min="2" max="36" value="16"></label>
+        <button class="viz-btn" id="viz-coalesce-toggle" type="button">Pause</button>
+      </div>
+    </div>
+    <svg id="viz-coalesce" class="diagram-svg" viewBox="0 0 1000 730" role="img"
+         aria-label="Animation: particles drift through a mesh (16 particles in an 8 by 8 mesh by default; mesh size and particle count are adjustable). Below, a row of particle memory slots and a row of mesh memory addresses. Lines connect each particle slot to the address of the cell it currently occupies; the lines cross and reshuffle as particles move, and turn orange when two particles share a cell.">
+      <text x="500" y="14" text-anchor="middle" class="svg-label" id="vz-toplabel"></text>
+      <g id="vz-cells"></g>
+      <g id="vz-grid" class="svg-grid" fill="none" stroke-width="1"></g>
+      <text x="500" y="557" text-anchor="middle" class="svg-label">particle array — one GPU thread per particle, in memory order</text>
+      <g id="vz-links"></g>
+      <g id="vz-pslots"></g>
+      <g id="vz-mem"></g>
+      <g id="vz-parts"></g>
+      <text x="500" y="703" text-anchor="middle" class="svg-label" id="vz-meshlabel"></text>
+      <text x="500" y="724" text-anchor="middle" class="svg-label" id="vz-readout"></text>
+    </svg>
+  </div>
+  <figcaption>Fig. 5 — Top: particles move through a mesh.
+    Bottom: particle memory order vs. mesh memory addresses.</figcaption>
+</figure>
+
+<p>
+  Using <a href="https://developer.nvidia.com/cuda" target="_blank" rel="noopener noreferrer">CUDA</a>, I have transferred both the particle and gas-phase equation solvers to the GPU. Following the Eulerian approach for the gas-phase, each cell is mapped to a GPU thread, whereas for the particles (Lagrangian approach), each particle is mapped to a GPU thread.
+  After the code implementation, I used <a href="https://docs.nvidia.com/cuda/profiler-users-guide/index.html#nvprof-overview" target="_blank" rel="noopener noreferrer">nvprof</a> and <a href="https://developer.nvidia.com/nvidia-visual-profiler" target="_blank" rel="noopener noreferrer">NVIDIA Visual Profiler</a> (now being replaced by Nsight products) to profile the performance of the GPU kernels and found a couple of places where it was slowing the code down.
+</p>
+
+<h3>Atomic Operations </h3>
+<p>
+Using the simplified algorithm, it guarantees that each particle interacts with only one cell at a time.
+However, we have multiple particles <strong>per cell</strong>. This means that in the P2C operation multiple particles can try to update the same cell simultaneously.
+In order to resolve this issue, atomic operations are required to ensure that updates to the same cell are performed safely and correctly.
+This may introduce a performance reduction, as threads must wait for one particle to finish updating the cell information, for the next particle (that is in the same cell) to apply the changes.
+The orange lines in Fig. 5 show the instances where we have multiple particles in a cell simultaneously, where atomic operations are necessary to ensure correct updates.
+</p>
+
+<h3>Coalesced Memory Access</h3>
+<p>
+  The second problem, especially for the P2C operation, is memory access patterns. Particles are randomly distributed across the grid,
+  and are interacting with the cells. Imagine P<sub>1</sub> is interacting with cell C<sub>3</sub>; however,
+  P<sub>2</sub>, which is adjacent to P<sub>1</sub> in memory, might be interacting with a completely different cell, say C<sub>50</sub>.
+  This forces the GPU to do a separate memory transaction (read the cell information) for each particle.
+
+</p>
+
+<figure>
+  <div class="card">
+    <div class="panel-pair">
+      <div>
+        <div class="panel-title">Coalesced access — the ideal</div>
+        <div class="panel-sub">consecutive threads touch consecutive addresses</div>
+        <svg class="diagram-svg" viewBox="0 0 340 250" role="img"
+             aria-label="Three adjacent threads P1, P2, P3 map straight down to the consecutive memory addresses C3, C4, C5; a single band underneath marks one coalesced memory transaction serving all three.">
+          <defs>
+            <marker id="ah-co" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 Z" fill="var(--diagram-strong)"/>
+            </marker>
+          </defs>
+          <text x="170" y="18" text-anchor="middle" class="svg-label">adjacent threads of one warp · particle memory order</text>
+          <g class="chip" stroke-width="1.2">
+            <rect x="80"  y="30" width="40" height="30" rx="7"/>
+            <rect x="150" y="30" width="40" height="30" rx="7"/>
+            <rect x="220" y="30" width="40" height="30" rx="7"/>
+          </g>
+          <g class="svg-label-strong" text-anchor="middle">
+            <text x="100" y="50">P₁</text><text x="170" y="50">P₂</text><text x="240" y="50">P₃</text>
+          </g>
+          <g fill="none" stroke="var(--diagram-strong)" stroke-width="1.6" marker-end="url(#ah-co)">
+            <line x1="100" y1="64" x2="139" y2="164"/>
+            <line x1="170" y1="64" x2="170" y2="164"/>
+            <line x1="240" y1="64" x2="201" y2="164"/>
+          </g>
+          <g stroke-width="1.2">
+            <rect class="mem-cell"    x="95"  y="170" width="30" height="32" rx="5"/>
+            <rect class="mem-touched" x="125" y="170" width="30" height="32" rx="5"/>
+            <rect class="mem-touched" x="155" y="170" width="30" height="32" rx="5"/>
+            <rect class="mem-touched" x="185" y="170" width="30" height="32" rx="5"/>
+            <rect class="mem-cell"    x="215" y="170" width="30" height="32" rx="5"/>
+          </g>
+          <g class="svg-label" text-anchor="middle">
+            <text x="110" y="190">C₂</text><text x="140" y="190">C₃</text><text x="170" y="190">C₄</text>
+            <text x="200" y="190">C₅</text><text x="230" y="190">C₆</text>
+          </g>
+          <rect class="txn-band" x="125" y="210" width="90" height="8" rx="4"/>
+          <text x="170" y="236" text-anchor="middle" class="svg-label">one memory transaction serves all three</text>
+        </svg>
+      </div>
+      <div>
+        <div class="panel-title">Scattered access — what particles produce</div>
+        <div class="panel-sub">adjacent threads touch far-apart addresses</div>
+        <svg class="diagram-svg" viewBox="0 0 340 250" role="img"
+             aria-label="The same three threads now map to scattered addresses: P1 to C3, P2 all the way to C50, P3 to C17, with ellipses marking the distance between address groups. Each touched address gets its own band: three separate memory transactions.">
+          <defs>
+            <marker id="ah-sc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 Z" fill="var(--diagram-strong)"/>
+            </marker>
+          </defs>
+          <text x="170" y="18" text-anchor="middle" class="svg-label">same threads · particles scattered over the mesh</text>
+          <g class="chip" stroke-width="1.2">
+            <rect x="80"  y="30" width="40" height="30" rx="7"/>
+            <rect x="150" y="30" width="40" height="30" rx="7"/>
+            <rect x="220" y="30" width="40" height="30" rx="7"/>
+          </g>
+          <g class="svg-label-strong" text-anchor="middle">
+            <text x="100" y="50">P₁</text><text x="170" y="50">P₂</text><text x="240" y="50">P₃</text>
+          </g>
+          <g fill="none" stroke="var(--diagram-strong)" stroke-width="1.6" marker-end="url(#ah-sc)">
+            <path d="M100,64 C 96,110 76,120 70,164"/>
+            <path d="M170,64 C 190,110 248,112 260,164"/>
+            <path d="M240,64 C 228,116 176,116 167,164"/>
+          </g>
+          <g stroke-width="1.2">
+            <rect class="mem-cell"    x="28"  y="170" width="26" height="32" rx="5"/>
+            <rect class="mem-touched" x="54"  y="170" width="26" height="32" rx="5"/>
+            <rect class="mem-cell"    x="80"  y="170" width="26" height="32" rx="5"/>
+            <rect class="mem-cell"    x="128" y="170" width="26" height="32" rx="5"/>
+            <rect class="mem-touched" x="154" y="170" width="26" height="32" rx="5"/>
+            <rect class="mem-cell"    x="180" y="170" width="26" height="32" rx="5"/>
+            <rect class="mem-cell"    x="221" y="170" width="26" height="32" rx="5"/>
+            <rect class="mem-touched" x="247" y="170" width="26" height="32" rx="5"/>
+            <rect class="mem-cell"    x="273" y="170" width="26" height="32" rx="5"/>
+          </g>
+          <g class="svg-label" text-anchor="middle">
+            <text x="41"  y="190">C₂</text><text x="67"  y="190">C₃</text><text x="93"  y="190">C₄</text>
+            <text x="141" y="190">C₁₆</text><text x="167" y="190">C₁₇</text><text x="193" y="190">C₁₈</text>
+            <text x="234" y="190">C₄₉</text><text x="260" y="190">C₅₀</text><text x="286" y="190">C₅₁</text>
+            <text x="115" y="190">⋯</text><text x="212" y="190">⋯</text>
+          </g>
+          <g class="txn-band">
+            <rect x="54"  y="210" width="26" height="8" rx="4"/>
+            <rect x="154" y="210" width="26" height="8" rx="4"/>
+            <rect x="247" y="210" width="26" height="8" rx="4"/>
+          </g>
+          <text x="170" y="236" text-anchor="middle" class="svg-label">three separate memory transactions</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <figcaption>Fig. 6 — The example from the text, drawn from the warp’s point of view. Left: if particles
+  adjacent in memory (P₁, P₂, P₃) also sat in adjacent cells, their three cell reads would land on
+  consecutive addresses (C₃, C₄, C₅) and the hardware would serve them with a single coalesced memory
+  transaction. Right: with randomly placed particles, P₁ reads C₃ while its memory-neighbor P₂ reads C₅₀ and
+  P₃ reads C₁₇ — the addresses are too far apart to combine, so every thread costs its own transaction. The
+  live Fig. 5 above shows the same mapping happening across the whole particle array.</figcaption>
+</figure>
+
+<details class="accordion">
+  <summary><strong>What is Coalesced Memory Access?</strong></summary>
+  <p>
+    In CUDA, coalesced memory access refers to the pattern where consecutive threads in a warp access consecutive memory addresses.
+    This allows the GPU to combine multiple memory requests into a single transaction, significantly improving memory throughput.
+    Non-coalesced access, on the other hand, results in multiple separate memory transactions, which can severely degrade performance.
+  </p>
+</details>
+
+<h2>Suggestions</h2>
+<p>
+Coalesced memory access was really slowing our code down, as it had a significant impact on the performance of both P2C and C2P operations.
+One of the suggestions we came up with was to sort the particles by their cell indices to improve memory coalescing and thus enhance the performance of both P2C and C2P operations.
+This approach introduces an additional sorting step, which itself has a computational cost.
+Also, our main simulations, which were coal particle combustion, were mostly very particle-dispersed simulations, which made it less likely for sorting by cell indices to yield significant memory coalescing benefits.
+</p>
+<p>
+However, if you are dealing with a particle-laden simulation, sorting the particles by cells can lead to significant improvements in memory coalescing and overall performance.
+The key is that you do not want to do the sorting at every timestep, but rather at intervals that balance sorting overhead with performance gains.
+A static equation for the sorting interval, determined at the initialization of the simulation, can be suggested as the following:
+</p>
+
+<div class="eq">
+  <span><var>C</var><sub><var>p</var>,0</sub><span class="op">=</span><span class="fn">max</span><span class="big">(</span><span
+    class="frac"><span class="num"><var>u</var><sub><var>x</var>,char</sub>&thinsp;&Delta;<var>t</var></span><span class="den">&Delta;<var>x</var></span></span>,<span
+    class="frac"><span class="num"><var>u</var><sub><var>y</var>,char</sub>&thinsp;&Delta;<var>t</var></span><span class="den">&Delta;<var>y</var></span></span>,<span
+    class="frac"><span class="num"><var>u</var><sub><var>z</var>,char</sub>&thinsp;&Delta;<var>t</var></span><span class="den">&Delta;<var>z</var></span></span><span class="big">)</span></span>
+  <span class="eq-no">(1)</span>
+</div>
+
+<p>
+where <span class="mvar">u</span><sub>x,char</sub>, <span class="mvar">u</span><sub>y,char</sub>, and
+<span class="mvar">u</span><sub>z,char</sub> are representative initial particle velocity magnitudes
+in each direction. A high percentile, such as the 95th percentile of the initial
+particle velocities, can be used to avoid making the interval overly sensitive to
+individual outliers.
+</p>
+
+<p>
+The fixed number of timesteps between sorting operations is then:
+</p>
+
+<div class="eq">
+  <span><var>N</var><sub>sort</sub><span class="op">=</span><span class="fn">max</span><span class="big">(</span>1,&nbsp;<span class="big">&lfloor;</span><span
+    class="frac"><span class="num"><var>&alpha;</var></span><span class="den"><var>C</var><sub><var>p</var>,0</sub></span></span><span class="big">&rfloor;</span><span class="big">)</span></span>
+  <span class="eq-no">(2)</span>
+</div>
+
+<p>
+where <span class="mvar">&alpha;</span> is a safety factor, typically between 0.25 and 0.50.
+The value of <span class="mvar">N</span><sub>sort</sub> is calculated once at initialization
+and remains constant throughout the simulation.
+</p>
+
+<p>
+Particles are therefore sorted at:
+</p>
+
+<div class="eq">
+  <span><var>k</var><span class="op">=</span><var>N</var><sub>sort</sub>,&ensp;2<var>N</var><sub>sort</sub>,&ensp;3<var>N</var><sub>sort</sub>,&ensp;&hellip;</span>
+  <span class="eq-no">(3)</span>
+</div>
+
+<p>
+I didn't have a chance/time to test this idea, as I moved to the next bottleneck in the simulation, which was radiation properties calculation (need another blog post).
+</p>
+
+        </div>
+
+        <footer class="post__footer reveal">
+          <a class="btn btn--ghost" href="/blog/">← All posts</a>
+          <a class="btn btn--clay" href="/#contact">Get in touch <span class="arrow">→</span></a>
+        </footer>
+
+      </div>
+    </article>
+  </main>
+
+  <!-- ======================================================== FOOTER -->
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <span>© <span id="year">2026</span> Babak Goshayeshi, Ph.D.</span>
+      <span>Built as a static site · hosted on GitHub Pages</span>
+    </div>
+  </footer>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <script>
+  (function () {
+    const svg = document.getElementById('viz-coalesce');
+    const btn = document.getElementById('viz-coalesce-toggle');
+    if (!svg || !btn) return;
+    const NS = 'http://www.w3.org/2000/svg';
+    const W = 1000, GTOP = 26, GBAND = 520, PY = 564, PH = 28, MY = 654, MH = 26;
+
+    const rowsIn = document.getElementById('vz-rows');
+    const colsIn = document.getElementById('vz-cols');
+    const npIn = document.getElementById('vz-np');
+    const grid = document.getElementById('vz-grid');
+    const cells = document.getElementById('vz-cells');
+    const mem = document.getElementById('vz-mem');
+    const pslots = document.getElementById('vz-pslots');
+    const links = document.getElementById('vz-links');
+    const partsG = document.getElementById('vz-parts');
+    const topLabel = document.getElementById('vz-toplabel');
+    const meshLabel = document.getElementById('vz-meshlabel');
+    const readout = document.getElementById('vz-readout');
+
+    const el = (name, attrs, parent) => {
+      const node = document.createElementNS(NS, name);
+      for (const k in attrs) node.setAttribute(k, attrs[k]);
+      parent.appendChild(node);
+      return node;
+    };
+    const clear = g => { while (g.firstChild) g.removeChild(g.firstChild); };
+    const clampIn = input => {
+      const lo = +input.min, hi = +input.max;
+      const v = Math.max(lo, Math.min(hi, Math.round(+input.value || lo)));
+      if (String(v) !== input.value) input.value = v;
+      return v;
+    };
+
+    let R, C, NP, CELL, GX, GY, GW, GH;
+    let cellRects = [], memRects = [], slotCx = [], parts = [], memCx;
+
+    function build() {
+      const oldParts = parts, oldGW = GW, oldGH = GH;
+      R = clampIn(rowsIn);
+      C = clampIn(colsIn);
+      NP = clampIn(npIn);
+
+      CELL = Math.min(64, GBAND / R, 700 / C);
+      GW = C * CELL;
+      GH = R * CELL;
+      GX = (W - GW) / 2;
+      GY = GTOP + (GBAND - GH) / 2;
+
+      clear(grid);
+      for (let i = 0; i <= C; i++)
+        el('line', { x1: GX + i * CELL, y1: GY, x2: GX + i * CELL, y2: GY + GH }, grid);
+      for (let j = 0; j <= R; j++)
+        el('line', { x1: GX, y1: GY + j * CELL, x2: GX + GW, y2: GY + j * CELL }, grid);
+
+      clear(cells);
+      cellRects = [];
+      for (let r = 0; r < R; r++) for (let c = 0; c < C; c++)
+        cellRects.push(el('rect', { x: GX + c * CELL + 1, y: GY + r * CELL + 1,
+                                    width: CELL - 2, height: CELL - 2, fill: 'none' }, cells));
+
+      const M = R * C;
+      const MGAP = M > 60 ? 1.2 : 2;
+      const MW = Math.min(26, (958 - (M - 1) * MGAP) / M);
+      const MX0 = (W - (M * MW + (M - 1) * MGAP)) / 2;
+      memCx = i => MX0 + i * (MW + MGAP) + MW / 2;
+      clear(mem);
+      memRects = [];
+      for (let i = 0; i < M; i++)
+        memRects.push(el('rect', { x: MX0 + i * (MW + MGAP), y: MY, width: MW, height: MH,
+                                   rx: Math.min(2, MW / 3), 'class': 'mem-cell', 'stroke-width': 1 }, mem));
+
+      const PGAP = 6;
+      const PW = Math.min(36, (950 - (NP - 1) * PGAP) / NP);
+      const PX0 = (W - (NP * PW + (NP - 1) * PGAP)) / 2;
+      const pfs = PW >= 30 ? 12 : 9;
+      clear(pslots);
+      slotCx = [];
+      for (let i = 0; i < NP; i++) {
+        const x = PX0 + i * (PW + PGAP);
+        slotCx.push(x + PW / 2);
+        el('rect', { x, y: PY, width: PW, height: PH, rx: 5, 'class': 'chip', 'stroke-width': 1.2 }, pslots);
+        el('text', { x: x + PW / 2, y: PY + PH / 2 + pfs / 2 - 1, 'text-anchor': 'middle',
+                     'class': 'svg-label-strong', 'font-size': pfs }, pslots)
+          .textContent = 'p' + i;
+      }
+
+      clear(links);
+      clear(partsG);
+      parts = [];
+      for (let i = 0; i < NP; i++) {
+        const o = oldParts[i];
+        const p = {
+          x: o ? Math.max(6, Math.min(GW - 6, o.x / oldGW * GW)) : 8 + Math.random() * (GW - 16),
+          y: o ? Math.max(6, Math.min(GH - 6, o.y / oldGH * GH)) : 8 + Math.random() * (GH - 16),
+          a: o ? o.a : Math.random() * Math.PI * 2,
+          v: o ? o.v : 22 + Math.random() * 16,
+          path: el('path', { 'class': 'vz-link' }, links),
+          dot: el('circle', { r: 4.5, 'class': 'vz-p' }, partsG),
+          lbl: el('text', { 'class': 'vz-plabel' }, partsG),
+        };
+        p.lbl.textContent = i;
+        parts.push(p);
+      }
+
+      topLabel.textContent = 'gas-phase mesh (' + R + '×' + C + ') — ' + NP + ' particles moving through it';
+      meshLabel.textContent = 'mesh cell array — ' + M + ' addresses, row-major (address = ' + C + '·row + col)';
+      render(0);
+    }
+
+    function render(dt) {
+      const count = new Array(R * C).fill(0);
+      for (const p of parts) {
+        if (dt) {
+          p.a += (Math.random() - 0.5) * 4.5 * dt;
+          p.x += Math.cos(p.a) * p.v * dt;
+          p.y += Math.sin(p.a) * p.v * dt;
+          if (p.x < 6) { p.x = 6; p.a = Math.PI - p.a; }
+          if (p.x > GW - 6) { p.x = GW - 6; p.a = Math.PI - p.a; }
+          if (p.y < 6) { p.y = 6; p.a = -p.a; }
+          if (p.y > GH - 6) { p.y = GH - 6; p.a = -p.a; }
+        }
+        p.cell = Math.min(R - 1, Math.floor(p.y / CELL)) * C + Math.min(C - 1, Math.floor(p.x / CELL));
+        count[p.cell]++;
+      }
+      let distinct = 0, contended = 0;
+      for (let i = 0; i < R * C; i++) {
+        if (count[i]) distinct++;
+        if (count[i] > 1) contended++;
+        memRects[i].setAttribute('class', count[i] > 1 ? 'mem-contended' : count[i] ? 'mem-touched' : 'mem-cell');
+        cellRects[i].setAttribute('class', count[i] > 1 ? 'vz-cell-hot' : count[i] ? 'vz-cell-on' : '');
+      }
+      parts.forEach((p, i) => {
+        const px = GX + p.x, py = GY + p.y;
+        p.dot.setAttribute('cx', px);
+        p.dot.setAttribute('cy', py);
+        p.lbl.setAttribute('x', px + 7);
+        p.lbl.setAttribute('y', py - 5);
+        const hot = count[p.cell] > 1;
+        p.dot.setAttribute('class', hot ? 'vz-p hot' : 'vz-p');
+        p.path.setAttribute('class', hot ? 'vz-link hot' : 'vz-link');
+        const x1 = slotCx[i], x2 = memCx(p.cell);
+        p.path.setAttribute('d', 'M' + x1 + ',' + (PY + PH) +
+          ' C' + x1 + ',' + (PY + PH + 30) + ' ' + x2 + ',' + (MY - 30) + ' ' + x2 + ',' + MY);
+      });
+      readout.textContent = NP + ' particle writes → ' + distinct + ' scattered addresses → ' +
+        distinct + ' memory transactions' +
+        (contended ? ' · ' + contended + ' cell' + (contended > 1 ? 's' : '') + ' contended → atomic adds'
+                   : ' · no collisions this instant');
+    }
+
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let playing = !reduced, visible = true, last = null, raf = null;
+
+    function frame(ts) {
+      raf = null;
+      if (!playing || !visible) { last = null; return; }
+      const dt = last == null ? 0 : Math.min(0.05, (ts - last) / 1000);
+      last = ts;
+      render(dt);
+      raf = requestAnimationFrame(frame);
+    }
+    function kick() { if (playing && visible && raf == null) raf = requestAnimationFrame(frame); }
+
+    btn.addEventListener('click', () => {
+      playing = !playing;
+      btn.textContent = playing ? 'Pause' : 'Play';
+      kick();
+    });
+    if (reduced) btn.textContent = 'Play';
+
+    [rowsIn, colsIn, npIn].forEach(inp => inp.addEventListener('change', build));
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(entries => {
+        visible = entries[0].isIntersecting;
+        kick();
+      }, { threshold: 0.1 }).observe(svg);
+    }
+
+    build();
+    kick();
+  })();
+  </script>
+  <script>
+  (function () {
+    const MESHES = ["16³", "32³", "64³", "128³"];
+    const SERIES = [
+      { name: "0.1 particles/cell", css: "--ord-1" },
+      { name: "1 particle/cell",    css: "--ord-2" },
+      { name: "10 particles/cell",  css: "--ord-3" },
+    ];
+    // Per-chart config: series-major values [ppc 0.1, 1, 10] x [16³, 32³, 64³, 128³].
+    // GPU charts: measured GPU-vs-CPU ratios (approximate method, random placement).
+    // Algo charts: approximate-vs-exact CPU speedup, digitized from the talk figures.
+    const CHARTS = {
+      "chart-algo-p2c": { op: "P2C", unit: "algorithm speedup", yMax: 3, yTicks: [0, 1, 2, 3],
+        data: [[1.20, 1.37, 1.42, 1.26], [1.83, 2.03, 1.95, 1.49], [2.31, 2.20, 2.18, 1.55]] },
+      "chart-algo-c2p": { op: "C2P", unit: "algorithm speedup", yMax: 3, yTicks: [0, 1, 2, 3],
+        data: [[2.62, 2.44, 2.25, 1.67], [2.65, 2.50, 1.96, 1.70], [2.84, 2.21, 1.94, 1.72]] },
+      "chart-p2c": { op: "P2C", unit: "GPU speedup", yMax: 45, yTicks: [0, 10, 20, 30, 40],
+        data: [[0.41, 2.23, 10.7, 14.6], [2.05, 10.8, 21.4, 16.3], [13.2, 25.8, 33.0, 22.0]] },
+      "chart-c2p": { op: "C2P", unit: "GPU speedup", yMax: 45, yTicks: [0, 10, 20, 30, 40],
+        data: [[0.34, 2.78, 12.9, 40.8], [2.81, 14.0, 22.9, 30.2], [19.1, 27.6, 33.8, 32.2]] },
+    };
+
+    const W = 340, H = 240, M = { top: 12, right: 8, bottom: 34, left: 34 };
+    const plotW = W - M.left - M.right, plotH = H - M.top - M.bottom;
+
+    const ns = "http://www.w3.org/2000/svg";
+    const el = (tag, attrs) => {
+      const e = document.createElementNS(ns, tag);
+      for (const k in attrs) e.setAttribute(k, attrs[k]);
+      return e;
+    };
+
+    const tooltip = document.getElementById("tooltip");
+    function showTip(evt, html) {
+      tooltip.innerHTML = html;
+      tooltip.style.opacity = 1;
+      const pad = 14;
+      let x = evt.clientX + pad, ty = evt.clientY + pad;
+      const r = tooltip.getBoundingClientRect();
+      if (x + r.width > innerWidth - 8) x = evt.clientX - r.width - pad;
+      if (ty + r.height > innerHeight - 8) ty = evt.clientY - r.height - pad;
+      tooltip.style.left = x + "px";
+      tooltip.style.top = ty + "px";
+    }
+    const hideTip = () => { tooltip.style.opacity = 0; };
+
+    function render(id) {
+      const svg = document.getElementById(id);
+      const { data, op, unit, yMax, yTicks } = CHARTS[id];
+      const y = v => M.top + plotH * (1 - v / yMax);
+
+      for (const v of yTicks) {
+        svg.appendChild(el("line", { x1: M.left, x2: W - M.right, y1: y(v), y2: y(v),
+          stroke: "var(--grid)", "stroke-width": 1 }));
+        const t = el("text", { x: M.left - 7, y: y(v) + 4, "text-anchor": "end",
+          fill: "var(--text-muted)", "font-size": 11, "font-variant-numeric": "tabular-nums" });
+        t.textContent = v;
+        svg.appendChild(t);
+      }
+      // parity line at 1x
+      svg.appendChild(el("line", { x1: M.left, x2: W - M.right, y1: y(1), y2: y(1),
+        stroke: "var(--axis)", "stroke-width": 1 }));
+      // baseline
+      svg.appendChild(el("line", { x1: M.left, x2: W - M.right, y1: y(0), y2: y(0),
+        stroke: "var(--axis)", "stroke-width": 1 }));
+
+      const band = plotW / MESHES.length;
+      const barW = Math.min(24, (band - 24) / SERIES.length - 2);
+      const groupW = SERIES.length * barW + (SERIES.length - 1) * 2;
+
+      MESHES.forEach((mesh, mi) => {
+        const gx = M.left + band * mi + (band - groupW) / 2;
+        const lbl = el("text", { x: M.left + band * mi + band / 2, y: H - 12,
+          "text-anchor": "middle", fill: "var(--text-muted)", "font-size": 11 });
+        lbl.textContent = mesh;
+        svg.appendChild(lbl);
+
+        SERIES.forEach((s, si) => {
+          const v = data[si][mi];
+          const bx = gx + si * (barW + 2);
+          const by = y(v), bh = Math.max(y(0) - by, 1.5);
+          const r = Math.min(4, bh / 2);
+          // rounded top, square baseline
+          const d = `M${bx},${y(0)} L${bx},${by + r} Q${bx},${by} ${bx + r},${by}` +
+                    ` L${bx + barW - r},${by} Q${bx + barW},${by} ${bx + barW},${by + r}` +
+                    ` L${bx + barW},${y(0)} Z`;
+          const bar = el("path", { d, fill: `var(${s.css})` });
+          const hit = el("rect", { x: bx - 4, y: M.top, width: barW + 8, height: plotH,
+            fill: "transparent" });
+          const tip = () =>
+            `<div>${op} · ${mesh} mesh · ${s.name}</div>` +
+            `<div class="tt-val">${v}× ${unit}</div>`;
+          for (const target of [bar, hit]) {
+            target.addEventListener("mousemove", e => showTip(e, tip()));
+            target.addEventListener("mouseleave", hideTip);
+          }
+          svg.appendChild(bar);
+          svg.appendChild(hit);
+        });
+      });
+
+      // axis caption
+      const cap = el("text", { x: M.left + plotW / 2, y: H - 0.5, "text-anchor": "middle",
+        fill: "var(--text-muted)", "font-size": 10 });
+      cap.textContent = "mesh size";
+      svg.appendChild(cap);
+    }
+
+    for (const id in CHARTS) render(id);
+
+    // legends (one per figure)
+    for (const legend of document.querySelectorAll("[data-legend]")) {
+      for (const s of SERIES) {
+        const key = document.createElement("span");
+        key.className = "key";
+        key.innerHTML = `<span class="swatch" style="background:var(${s.css})"></span>${s.name}`;
+        legend.appendChild(key);
+      }
+    }
+
+    // table views (one per figure; columns follow the data-table-for chart list)
+    for (const tbody of document.querySelectorAll("[data-table-for]")) {
+      const ids = tbody.getAttribute("data-table-for").split(",");
+      MESHES.forEach((mesh, mi) => {
+        const tr = document.createElement("tr");
+        const cells = [mesh];
+        for (const id of ids)
+          for (let si = 0; si < SERIES.length; si++)
+            cells.push(CHARTS[id].data[si][mi] + "×");
+        tr.innerHTML = cells.map(c => `<td>${c}</td>`).join("");
+        tbody.appendChild(tr);
+      });
+    }
+
+    // respect reduced-motion: don't autoplay the simulation videos
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      for (const v of document.querySelectorAll("video[autoplay]")) {
+        v.removeAttribute("autoplay");
+        v.pause();
+      }
+    }
+  })();
+  </script>
+
+  <script src="/script.js"></script>
+</body>
+</html>
