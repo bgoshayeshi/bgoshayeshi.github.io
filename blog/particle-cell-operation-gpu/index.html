@@ -168,7 +168,7 @@
       width: min(1080px, calc(100vw - 2.5rem));
       margin: 0 0 20px 50%; transform: translateX(-50%);
     }
-    .code-compare pre { margin: 8px 0 0; font-size: 11px; }
+    .code-compare pre { margin: 8px 0 0; font-size: 12px; }
     .code-compare > div:last-child { display: flex; flex-direction: column; justify-content: center; }
     .code-arrow {
       align-self: center; font-size: 2.1rem; line-height: 1;
@@ -296,10 +296,10 @@
    
 </p>
 <p>
-   We presented this work at multiple conferences
-   (SIAM CSE 2017 &amp; <a href="https://www.siam.org/meetings/nc17">NC 2017</a>), however, never published a full article on it. This is a draft on how we
-   approached the Particle-Cell operation problem and addressed it.</p>
-</p>
+   We presented this work at SIAM CSE 2017 and
+   <a href="https://web.archive.org/web/2017/https://www.siam.org/meetings/nc17">NC 2017</a>, but never
+   published a full article on it. This is a long-overdue to write this up, and with the help of AI and its magic, 
+   I can make it more engaiging with the visuals and animations.</p>
 <h2>Background: Uintah Software</h2>
 <p>
   The Uintah Computational Framework is an open-source, massively parallel software suite designed for
@@ -347,11 +347,6 @@
    the code must account for the interactions between particles and gas cells, which is incorporated in the source terms.
 </p>
 
-<p class="post__note">
-  <strong>Note:</strong> In our code, we used <code>two-way coupling</code>, meaning that gas has an impact on particles,
-  particles have an impact on cells, and there is no particle-particle interaction.
-</p>
-
 <p>
   To make “every particle” concrete, here is one of the simulations from the original talk. This is what the
   particle phase actually looks like: a cloud of Lagrangian particles carried through the domain by the gas,
@@ -360,17 +355,11 @@
 
 <figure>
   <div class="card">
-    <div class="panel-pair">
-      <div>
-        <div class="panel-title">Coal-boiler simulation</div>
-        <div class="panel-sub">fuel particles carried through the boiler, colored by particle velocity</div>
-        <video class="sim-video" autoplay muted loop playsinline controls preload="metadata"
-               poster="assets/coal-boiler-pvel-poster.jpg" style="aspect-ratio: 372 / 480; max-width: 420px; margin: 0 auto;"
-               aria-label="Simulation of a coal boiler with a cloud of fuel particles carried through the domain, colored by particle velocity.">
-          <source src="assets/coal-boiler-pvel.mp4" type="video/mp4">
-        </video>
-      </div>
-    </div>
+    <video class="sim-video" autoplay muted loop playsinline controls preload="metadata"
+           poster="assets/coal-boiler-pvel-poster.jpg" style="aspect-ratio: 372 / 480; max-width: 420px; margin: 0 auto;"
+           aria-label="Simulation of a coal boiler with a cloud of fuel particles carried through the domain, colored by particle velocity.">
+      <source src="assets/coal-boiler-pvel.mp4" type="video/mp4">
+    </video>
   </div>
   <figcaption>Fig. 1 — A coal-boiler simulation with fuel particles carried through the boiler, colored by particle velocity.</figcaption>
 </figure>
@@ -510,6 +499,11 @@
   Simplifying the particle–cell operators to this nearest-cell approximation yields roughly a
   <strong>2× speedup on CPU</strong>.
 </p>
+<p>
+  All benchmarks in this post share the same setup: cubic meshes from 16³ to 128³ cells, with particles
+  <em>randomly distributed</em> in the domain, as they are in a real simulation, at average loadings of
+  0.1, 1, and 10 particles per cell (ppc).
+</p>
 
 <figure>
   <div class="card">
@@ -593,61 +587,25 @@
 </figure>
 
 <p>
-  Three things stand out in the data:
+  At 16³ with 0.1 ppc the GPU is actually <em>slower</em> than the CPU (0.3–0.4×): there simply isn’t
+  enough work to amortize the kernel launch and keep the device occupied. The crossover comes quickly,
+  though — by 64³ every configuration is at 10× or better, and the largest workloads peak around 33–41×.
+  The number that matters most is the gap between the two operators: at 128³ the gather (C2P) reaches
+  ≈&thinsp;41× while the scatter (P2C) tops out around 15–22×. The rest of this post is about where that
+  gap comes from.
 </p>
-<ul>
-  <li><strong>Small problems don’t pay for the GPU.</strong> At 16³ with 0.1 ppc the GPU is actually
-      <em>slower</em> than the CPU (0.3–0.4×) — there simply isn’t enough work to amortize kernel launch and
-      keep the device occupied. The crossover comes quickly: by 64³ every configuration is 10× or better.</li>
-  <li><strong>Speedup grows with work.</strong> More cells and more particles per cell both push the numbers
-      up, peaking around 33–41× for the largest workloads.</li>
-  <li><strong>Scatter consistently trails gather.</strong> At 128³ C2P reaches ≈&thinsp;41× while P2C peaks
-      around 15–22×. That gap is structural, and worth unpacking.</li>
-</ul>
 
 <h2>The challenges</h2>
-<figure>
-  <div class="card">
-    <div class="viz-head">
-      <div>
-        <div class="panel-title">Scattered access, live</div>
-        <div class="panel-sub">each particle is one GPU thread; each line shows where in the mesh array its write lands right now</div>
-      </div>
-      <div class="viz-ctls">
-        <label>rows <input id="vz-rows" type="number" min="2" max="12" value="8"></label>
-        <label>cols <input id="vz-cols" type="number" min="2" max="12" value="8"></label>
-        <label>particles <input id="vz-np" type="number" min="2" max="36" value="16"></label>
-        <button class="viz-btn" id="viz-coalesce-toggle" type="button">Pause</button>
-      </div>
-    </div>
-    <svg id="viz-coalesce" class="diagram-svg" viewBox="0 0 1000 730" role="img"
-         aria-label="Animation: particles drift through a mesh (16 particles in an 8 by 8 mesh by default; mesh size and particle count are adjustable). Below, a row of particle memory slots and a row of mesh memory addresses. Lines connect each particle slot to the address of the cell it currently occupies; the lines cross and reshuffle as particles move, and turn orange when two particles share a cell.">
-      <text x="500" y="14" text-anchor="middle" class="svg-label" id="vz-toplabel"></text>
-      <g id="vz-cells"></g>
-      <g id="vz-grid" class="svg-grid" fill="none" stroke-width="1"></g>
-      <text x="500" y="557" text-anchor="middle" class="svg-label">particle array — one GPU thread per particle, in memory order</text>
-      <g id="vz-links"></g>
-      <g id="vz-pslots"></g>
-      <g id="vz-mem"></g>
-      <g id="vz-parts"></g>
-      <text x="500" y="703" text-anchor="middle" class="svg-label" id="vz-meshlabel"></text>
-      <text x="500" y="724" text-anchor="middle" class="svg-label" id="vz-readout"></text>
-    </svg>
-  </div>
-  <figcaption>Fig. 5 — Top: particles move through a mesh.
-    Bottom: particle memory order vs. mesh memory addresses.</figcaption>
-</figure>
-
 <p>
-  Using <a href="https://developer.nvidia.com/cuda" target="_blank" rel="noopener noreferrer">CUDA</a>, I have transferred both the particle and gas-phase equation solvers to the GPU. Following the Eulerian approach for the gas-phase, each cell is mapped to a GPU thread, whereas for the particles (Lagrangian approach), each particle is mapped to a GPU thread.
-  After the code implementation, I used <a href="https://docs.nvidia.com/cuda/profiler-users-guide/index.html#nvprof-overview" target="_blank" rel="noopener noreferrer">nvprof</a> and <a href="https://developer.nvidia.com/nvidia-visual-profiler" target="_blank" rel="noopener noreferrer">NVIDIA Visual Profiler</a> (now being replaced by Nsight products) to profile the performance of the GPU kernels and found a couple of places where it was slowing the code down.
+  Once the port was working, I profiled the kernels with <a href="https://docs.nvidia.com/cuda/profiler-users-guide/index.html#nvprof-overview" target="_blank" rel="noopener noreferrer">nvprof</a> and the <a href="https://developer.nvidia.com/nvidia-visual-profiler" target="_blank" rel="noopener noreferrer">NVIDIA Visual Profiler</a> (both since replaced by the Nsight tools). The metrics pointed at two problems: atomic contention in the scatter, and poor global-memory load efficiency in both operators.
 </p>
 
-<h3>Atomic Operations </h3>
+<h3>Atomic Operations</h3>
 <p>
 Using the simplified algorithm, it guarantees that each particle interacts with only one cell at a time.
 However, we have multiple particles <strong>per cell</strong>. This means that in the P2C operation multiple particles can try to update the same cell simultaneously.
 In order to resolve this issue, atomic operations are required to ensure that updates to the same cell are performed safely and correctly.
+Using CUDA, I used atomicAdd(), and atomics serialize: threads writing to the same address wait on one another. 
 This may introduce a performance reduction, as threads must wait for one particle to finish updating the cell information, for the next particle (that is in the same cell) to apply the changes.
 The orange lines in Fig. 5 show the instances where we have multiple particles in a cell simultaneously, where atomic operations are necessary to ensure correct updates.
 </p>
@@ -657,8 +615,7 @@ The orange lines in Fig. 5 show the instances where we have multiple particles i
   The second problem, especially for the P2C operation, is memory access patterns. Particles are randomly distributed across the grid,
   and are interacting with the cells. Imagine P<sub>1</sub> is interacting with cell C<sub>3</sub>; however,
   P<sub>2</sub>, which is adjacent to P<sub>1</sub> in memory, might be interacting with a completely different cell, say C<sub>50</sub>.
-  This forces the GPU to do a separate memory transaction (read the cell information) for each particle.
-
+  This forces the GPU to issue a separate memory transaction for nearly every thread in the warp.
 </p>
 
 <figure>
@@ -754,12 +711,11 @@ The orange lines in Fig. 5 show the instances where we have multiple particles i
       </div>
     </div>
   </div>
-  <figcaption>Fig. 6 — The example from the text, drawn from the warp’s point of view. Left: if particles
+  <figcaption>Fig. 5 — The example from the text, drawn from the warp’s point of view. Left: if particles
   adjacent in memory (P₁, P₂, P₃) also sat in adjacent cells, their three cell reads would land on
   consecutive addresses (C₃, C₄, C₅) and the hardware would serve them with a single coalesced memory
   transaction. Right: with randomly placed particles, P₁ reads C₃ while its memory-neighbor P₂ reads C₅₀ and
-  P₃ reads C₁₇ — the addresses are too far apart to combine, so every thread costs its own transaction. The
-  live Fig. 5 above shows the same mapping happening across the whole particle array.</figcaption>
+  P₃ reads C₁₇ — the addresses are too far apart to combine, so every thread costs its own transaction.</figcaption>
 </figure>
 
 <details class="accordion">
@@ -793,11 +749,11 @@ A static equation for the sorting interval, determined at the initialization of 
 </div>
 
 <p>
-where <span class="mvar">u</span><sub>x,char</sub>, <span class="mvar">u</span><sub>y,char</sub>, and
+Equation (1) is just a CFL number for the particle phase — the fraction of a cell width a typical particle
+crosses per timestep. Here <span class="mvar">u</span><sub>x,char</sub>, <span class="mvar">u</span><sub>y,char</sub>, and
 <span class="mvar">u</span><sub>z,char</sub> are representative initial particle velocity magnitudes
-in each direction. A high percentile, such as the 95th percentile of the initial
-particle velocities, can be used to avoid making the interval overly sensitive to
-individual outliers.
+in each direction; a high percentile, such as the 95th percentile of the initial
+particle velocities, avoids making the interval overly sensitive to individual outliers.
 </p>
 
 <p>
@@ -813,7 +769,9 @@ The fixed number of timesteps between sorting operations is then:
 <p>
 where <span class="mvar">&alpha;</span> is a safety factor, typically between 0.25 and 0.50.
 The value of <span class="mvar">N</span><sub>sort</sub> is calculated once at initialization
-and remains constant throughout the simulation.
+and remains constant throughout the simulation. In words: <span class="mvar">N</span><sub>sort</sub> is how
+many timesteps a typical particle needs to drift about <span class="mvar">&alpha;</span> of a cell width —
+roughly how long the sorted order stays valid.
 </p>
 
 <p>
@@ -1091,7 +1049,7 @@ I didn't have a chance/time to test this idea, as I moved to the next bottleneck
           stroke: "var(--grid)", "stroke-width": 1 }));
         const t = el("text", { x: M.left - 7, y: y(v) + 4, "text-anchor": "end",
           fill: "var(--text-muted)", "font-size": 11, "font-variant-numeric": "tabular-nums" });
-        t.textContent = v;
+        t.textContent = v ? v + "×" : "0";
         svg.appendChild(t);
       }
       // parity line at 1x
