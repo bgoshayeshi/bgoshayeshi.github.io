@@ -118,7 +118,6 @@ html, body {
 }
 .chip[data-k="gpu"]  { color: var(--accent-5); animation-delay: 0.4s; }
 .chip[data-k="tpu"]  { color: var(--accent-3); animation-delay: 0.8s; }
-.chip[data-k="fpga"] { color: var(--accent-4); animation-delay: 1.2s; }
 
 @keyframes chipPulse {
     0%, 100% { border-color: var(--line-strong); }
