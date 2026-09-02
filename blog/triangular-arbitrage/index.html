@@ -838,7 +838,7 @@
 
 <h2>Implementation</h2>
 
-<p>In my case, I was working with the Bittrex exchange, where there were hundreds of different currencies and markets. Also, it had very comprehensive API documentation.</p>
+<p>I was working with an exchange, where there were hundreds of different currencies and markets. Also, it had very comprehensive API documentation.</p>
 
 <h3>First iteration</h3>
 
@@ -856,7 +856,7 @@
 
 <h3>Second iteration</h3>
 
-<p>The problem was the <code>REST API</code> and the time it took to get the order book data. Using the <code>REST API</code>, I was running the API call in a loop, and it was constantly asking the server for the order book, even when nothing changed. Most servers put a limit on the number of requests you can make in a certain time frame, and if you exceed that limit, they do not respond to your API call. So, I was constantly hitting the limit and getting blocked.</p>
+<p>The problem was the <code>REST API</code> and the time it took to get the order book data. Using the <code>REST API</code>, I was running the API call in a loop, and it was constantly asking the server for the order book, even when nothing changed. Fist of all <code>REST API</code> is very slow, Really slow. It introduces a significant delay between the moment you request the data and the moment you receive it. Also, most servers put a limit on the number of requests you can make in a certain time frame, and if you exceed that limit in that time frame, they do not respond to your API call. So, I was constantly hitting the limit and getting blocked.</p>
 
 <p>The solution was to use the <code>WebSocket API</code>, which is a more efficient way to get real-time data from the exchange. With the <code>WebSocket API</code>, you can subscribe to the order book data and get updates whenever there is a change, instead of constantly asking for the data. So, now I was able to get the order book data only when something changed in the order book.</p>
 
@@ -917,7 +917,7 @@
 
 <p>I was running this code on my laptop on my home network, in Salt Lake City, Utah. The exchange server was in New York or the Bay Area (my initial guesses), so it takes a while for data and API requests to travel from my laptop to the exchange server and back.</p>
 
-<p>Solution: finding the best performing server on the cloud. I had GCP at that time, with $200 credit (thank you Google!). The code did not require a lot of resources (memory or CPU), so I kept creating compute instances all across the US and timing the code to find the best performing server, and somewhere in the middle of the US, I found a server that was able to reduce the time lag to around <code>0.008</code> seconds! Beautiful, I cried!</p>
+<p>Solution: finding the best performing server on the cloud. I had GCP (<a href="https://cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Platform</a>) at that time, with $200 credit (thank you Google!). The code did not require a lot of resources (memory or CPU), so I kept creating compute instances all across the US and timing the code to find the best performing server, and somewhere in the middle of the US, I found a server that was able to reduce the time lag to around <code>0.008</code> seconds! Beautiful, I cried!</p>
 
 <figure id="hunt-fig">
   <div class="fig-frame">
