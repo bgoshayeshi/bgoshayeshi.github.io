@@ -1,0 +1,410 @@
+<!-- Spherical Harmonics (P_N) — simple visual explainer for a broad audience.
+     Included into index.html by the data-include loader.
+     Every colour token has a literal fallback so the figure renders even if the site stylesheet is missing. -->
+<style>
+  .pn-simple {
+    --pn-blue: #2a78d6; --pn-ray: #d98a1f; --pn-heat: #eb6834;
+    --pn-paper: var(--paper-2, #F5F4EF); --pn-card: var(--card, #FBFAF6); --pn-line: var(--line, #E2DED2);
+    --pn-line-strong: var(--line-strong, #D6D1C4); --pn-ink: var(--ink, #1A1A18); --pn-ink-soft: var(--ink-soft, #3D3C37);
+    --pn-muted: var(--muted, #6B6A62);
+    --pn-mono: var(--mono, "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace);
+    --pn-sans: var(--sans, "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif);
+    margin: 0; border: 1px solid var(--pn-line); border-radius: 8px; overflow: hidden;
+    background: radial-gradient(circle at 14% 40%, color-mix(in srgb, var(--pn-ray) 6%, transparent), transparent 28%), var(--pn-card);
+  }
+  .pn-simple__head { padding: 18px 20px 12px; }
+  .pn-simple__head h4 { margin: 0 0 5px !important; color: var(--pn-ink); font-size: 16px !important; }
+  .pn-simple__head p { margin: 0; color: var(--pn-muted); font: 12px/1.5 var(--pn-mono); max-width: 70ch; }
+  .pn-simple__stage { padding: 4px 14px 14px; }
+  .pn-simple svg { display: block; width: 100%; height: auto; }
+
+  .pn-title { fill: var(--pn-ink); font: 600 13px var(--pn-sans); }
+  .pn-sub { fill: var(--pn-muted); font: 10px var(--pn-mono); }
+  .pn-big-arrow { fill: none; stroke: var(--pn-line-strong); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .pn-circle { fill: var(--pn-paper); stroke: var(--pn-line); stroke-width: 1.1; }
+  .pn-ring { fill: none; stroke: var(--pn-line); stroke-width: .8; opacity: .55; }
+  .pn-term { fill: var(--pn-blue); stroke: var(--pn-blue); stroke-width: 1; }
+  .pn-term-label { fill: var(--pn-muted); font: 8.5px var(--pn-mono); }
+  .pn-cellbox { fill: var(--pn-paper); stroke: var(--pn-line-strong); stroke-width: 1.3; stroke-dasharray: 2 3; stroke-linecap: round; }
+  .pn-ray-line { stroke: var(--pn-ray); stroke-width: 1; stroke-linecap: round; opacity: .22; }
+  .pn-real { fill: none; stroke: var(--pn-ray); stroke-width: 1.6; stroke-dasharray: 4 3; stroke-linejoin: round; }
+  .pn-kernel { fill: var(--pn-blue); fill-opacity: .11; stroke: var(--pn-blue); stroke-width: 1.7; stroke-linejoin: round; opacity: .85; transition: d .35s ease; }
+  .pn-model { fill: var(--pn-ray); fill-opacity: .22; stroke: var(--pn-ray); stroke-width: 2.6; stroke-linejoin: round; transition: d .35s ease; }
+  .pn-real--dashed { fill: none; stroke-width: 1.3; stroke-dasharray: 4 3; opacity: .8; }
+  .pn-model--neg { fill: var(--pn-ray); fill-opacity: .06; stroke: var(--pn-ray); stroke-width: 1.4; stroke-dasharray: 1.5 2.5; opacity: .85; transition: d .35s ease; }
+  .pn-center { fill: var(--pn-ink); }
+
+  .pn-domain { fill: var(--pn-paper); stroke: var(--pn-line-strong); stroke-width: 1.2; }
+  .pn-grid { stroke: var(--pn-line); stroke-width: 1; }
+  .pn-grid--faint { opacity: .55; }
+  .pn-mini-shape { fill: var(--pn-ray); fill-opacity: .22; stroke: var(--pn-ray); stroke-width: 1.2; }
+  .pn-mini-dot { fill: var(--pn-ray); opacity: .35; }
+  .pn-selected-cell { fill: color-mix(in srgb, var(--pn-blue) 7%, transparent); stroke: var(--pn-blue); stroke-width: 1.8; }
+
+  .pn-field { image-rendering: auto; }
+  .pn-truth { fill: none; stroke: var(--pn-ray); stroke-width: 1.4; stroke-dasharray: 4 3; opacity: .9; }
+  .pn-source { fill: var(--pn-heat); }
+  .pn-source-glow { fill: var(--pn-heat); opacity: .18; }
+
+  .pn-pill { fill: var(--pn-paper); stroke: var(--pn-line); }
+
+  .pn-simple__controls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px 22px; padding: 14px 18px 18px; border-top: 1px solid var(--pn-line); }
+  .pn-simple button.is-active--mesh { color: #fff; background: var(--pn-blue); border-color: var(--pn-blue); }
+  .pn-control-label { display: block; margin-bottom: 7px; color: var(--pn-muted); font: 600 10px var(--pn-mono); letter-spacing: .09em; text-transform: uppercase; }
+  .pn-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pn-simple button { appearance: none; border: 1px solid var(--pn-line-strong); border-radius: 7px; background: var(--pn-paper); color: var(--pn-ink-soft); padding: 7px 10px; font: 500 11px var(--pn-mono); cursor: pointer; }
+  .pn-simple button.is-active { color: #fff; background: var(--pn-ray); border-color: var(--pn-ray); }
+  .pn-order { display: flex; align-items: center; gap: 10px; }
+  .pn-order output { min-width: 34px; color: var(--pn-blue); font: 700 20px var(--pn-mono); }
+  .pn-order input { width: min(180px, 44vw); accent-color: var(--pn-blue); }
+  @media (max-width: 640px) { .pn-simple__controls { flex-direction: column; } }
+  @media (prefers-reduced-motion: reduce) { .pn-model, .pn-kernel { transition: none !important; } }
+</style>
+
+<figure>
+<div class="pn-simple" id="pnSimple">
+  <div class="pn-simple__head">
+    <h4>Spherical Harmonics: describe the light instead of following every ray</h4>
+    <p id="pnSimpleStatus">Light coming from many directions is replaced by a smooth mathematical description.</p>
+  </div>
+
+  <div class="pn-simple__stage">
+    <svg viewBox="0 0 760 350" role="img" aria-labelledby="pnSimpleTitle pnSimpleDesc">
+      <title id="pnSimpleTitle">How the Spherical Harmonics radiation model works</title>
+      <desc id="pnSimpleDesc">Four panels. One: the selected light pattern, how the hot cell emits. Two: in blue, the finest harmonic the model uses at order N, a flower with 2N equal petals that depends only on N. Under the cell, the harmonics the model uses with their solved weights: the model solves for these weights, not for the shapes. In amber, their weighted sum, the model's fit of the selected light, over a dashed outline of the light itself; small dotted lobes mark where the truncated series goes negative. Three: in amber, what the model finds in each cell: the truncated shape of the light arriving from the hot cell, a leaning blob at low order and a narrow lobe at high order. A mesh selector shows that the mesh only changes how blocky the answer is, not how smooth it is in angle. Four: the radiation field the model predicts around a hot spot, drawn as a glow that fades with distance, with the true field shown as a dashed outline for comparison.</desc>
+      <defs>
+        <filter id="pnSimpleGlow" filterUnits="userSpaceOnUse" x="0" y="0" width="760" height="350">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <clipPath id="pnFieldClip"><rect x="592" y="86" width="160" height="152" rx="7"/></clipPath>
+      </defs>
+
+      <!-- 1. light in one cell -->
+      <text x="97" y="30" text-anchor="middle" class="pn-title">1. Selected light pattern</text>
+      <text x="97" y="46" text-anchor="middle" class="pn-sub">how the hot cell emits</text>
+      <circle cx="97" cy="162" r="74" class="pn-circle"/>
+      <circle cx="97" cy="162" r="49" class="pn-ring"/>
+      <g id="pnSimpleRays"></g>
+      <path id="pnSimpleReal" class="pn-real" d=""/>
+      <circle cx="97" cy="162" r="4" class="pn-center"/>
+      <text x="97" y="258" text-anchor="middle" class="pn-sub">brightness by direction</text>
+      <text x="97" y="272" text-anchor="middle" class="pn-sub">dashed = reality, as in (4)</text>
+
+      <path d="M182 161 H208 M201 155 L208 161 L201 167" class="pn-big-arrow"/>
+
+      <!-- 2. smooth approximation -->
+      <text x="283" y="30" text-anchor="middle" class="pn-title">2. Model shape (in each cell)</text>
+      <text x="283" y="46" text-anchor="middle" class="pn-sub">set by N, not by the light</text>
+      <rect x="209" y="88" width="148" height="148" rx="4" class="pn-cellbox"/>
+      <path id="pnSimpleKernel" class="pn-kernel" d=""/>
+      <path id="pnSimpleGhost" class="pn-real pn-real--dashed" d=""/>
+      <path id="pnSimpleModelNeg" class="pn-model--neg" d=""/>
+      <path id="pnSimpleModel" class="pn-model" d=""/>
+      <circle cx="283" cy="162" r="4" class="pn-center"/>
+      <g id="pnSimpleTerms"></g>
+      <text id="pnSimpleFitText" x="283" y="293" text-anchor="middle" class="pn-sub">fit = weighted sum of these</text>
+
+      <path d="M368 161 H394 M387 155 L394 161 L387 167" class="pn-big-arrow"/>
+
+      <!-- 3. every cell -->
+      <text x="472" y="30" text-anchor="middle" class="pn-title">3. Solving in every cell</text>
+      <text x="472" y="46" text-anchor="middle" class="pn-sub">the shape found in each cell</text>
+      <rect x="392" y="86" width="160" height="152" rx="7" class="pn-domain"/>
+      <g class="pn-grid">
+        <line x1="424" y1="86" x2="424" y2="238"/><line x1="456" y1="86" x2="456" y2="238"/><line x1="488" y1="86" x2="488" y2="238"/><line x1="520" y1="86" x2="520" y2="238"/>
+        <line x1="392" y1="116.4" x2="552" y2="116.4"/><line x1="392" y1="146.8" x2="552" y2="146.8"/><line x1="392" y1="177.2" x2="552" y2="177.2"/><line x1="392" y1="207.6" x2="552" y2="207.6"/>
+      </g>
+      <rect x="456" y="207.6" width="32" height="30.4" rx="3" class="pn-selected-cell"/>
+      <g id="pnSimpleMeshShapes"></g>
+      <path d="M472 240 V248" fill="none" stroke="#2a78d6" stroke-width="1.2" stroke-dasharray="3 3"/>
+      <text x="472" y="258" text-anchor="middle" class="pn-sub">lit from the hot cell</text>
+      <text id="pnSimpleCellText" x="472" y="272" text-anchor="middle" class="pn-sub">P₁: leaning blobs everywhere</text>
+
+      <path d="M568 161 H594 M587 155 L594 161 L587 167" class="pn-big-arrow"/>
+
+      <!-- 4. the rendered radiation -->
+      <text x="672" y="30" text-anchor="middle" class="pn-title">4. The result</text>
+      <text x="672" y="46" text-anchor="middle" class="pn-sub">the radiation field</text>
+      <rect x="592" y="86" width="160" height="152" rx="7" class="pn-domain"/>
+      <g clip-path="url(#pnFieldClip)">
+        <image id="pnSimpleField" class="pn-field" x="592" y="86" width="160" height="152" preserveAspectRatio="none" href=""/>
+        <path id="pnSimpleTruth" class="pn-truth" d=""/>
+      </g>
+      <g class="pn-grid" id="pnSimpleFieldGrid" clip-path="url(#pnFieldClip)"></g>
+      <circle cx="632" cy="196" r="12" class="pn-source-glow"/>
+      <circle cx="632" cy="196" r="5" class="pn-source"/>
+      <circle cx="632" cy="196" r="2" fill="#fff" opacity=".8"/>
+      <text id="pnSimpleFieldText" x="672" y="258" text-anchor="middle" class="pn-sub">an even glow</text>
+      <text id="pnSimpleMeshText" x="672" y="272" text-anchor="middle" class="pn-sub">dashed = reality · 32×32 cells</text>
+
+      <!-- bottom message -->
+      <rect x="130" y="300" width="500" height="28" rx="14" class="pn-pill"/>
+      <text id="pnSimpleBottom" x="380" y="318" text-anchor="middle" class="pn-sub">P₁: smooth and cheap — ideal when the light is already diffuse</text>
+    </svg>
+  </div>
+
+  <div class="pn-simple__controls">
+    <div class="pn-control-group">
+      <span class="pn-control-label">Try a different light pattern</span>
+      <div class="pn-buttons" id="pnSimpleScenes">
+        <button type="button" data-scene="smooth" class="is-active">Smooth glow</button>
+        <button type="button" data-scene="side">Mostly from one side</button>
+        <button type="button" data-scene="beam">Sharp beam</button>
+      </div>
+    </div>
+    <div class="pn-control-group">
+      <span class="pn-control-label">How fine a mesh?</span>
+      <div class="pn-buttons" id="pnSimpleMeshes">
+        <button type="button" data-mesh="0">16 × 16</button>
+        <button type="button" data-mesh="1" class="is-active--mesh">32 × 32</button>
+        <button type="button" data-mesh="2">64 × 64</button>
+      </div>
+    </div>
+    <div class="pn-control-group">
+      <label class="pn-control-label" for="pnSimpleOrder">Increase the model detail</label>
+      <div class="pn-order">
+        <output id="pnSimpleOrderOutput" for="pnSimpleOrder">P₁</output>
+        <input id="pnSimpleOrder" type="range" min="1" max="7" step="2" value="1" aria-label="Spherical harmonics order"/>
+      </div>
+    </div>
+  </div>
+</div>
+<figcaption>
+  Fig. 5 — Spherical harmonics in one picture. Instead of tracking individual rays, the method describes how
+  radiation varies with direction using a smooth mathematical shape (2). The blue flower there is the finest
+  harmonic the model uses at that order, the same whatever the light: more petals, finer detail. The model does
+  not solve for that shape; it solves for how much of each harmonic to use — the weights shown under the cell —
+  and the amber fit is their sum. It then solves that description in every cell
+  of the mesh (3), and the result is the radiation field (4): the glow the model predicts around a hot spot,
+  fading with distance, with reality drawn as a dashed outline. A low-order model such as P<sub>1</sub> is very
+  smooth and inexpensive — for a diffuse glow it is nearly exact, but it smears a sharp beam into a dim blob.
+  Higher orders bring the beam back, with the small ripples that are the method's signature, at the price of
+  more computation. The mesh only sets how finely that answer is drawn: coarse cells make it blocky, fine cells
+  make it crisp — but no mesh can give P<sub>1</sub> a beam back.
+</figcaption>
+</figure>
+
+<details class="accordion">
+  <summary>Why doesn't a finer mesh fix the blob?</summary>
+  <p>
+    The blurring in P<sub>N</sub> happens in <em>angle</em>, not in space. The mesh decides how finely the field
+    is drawn across the room; the order <span class="mvar">N</span> decides how finely the light's direction is
+    described at each point. They are independent knobs. Go from 16 × 16 to 64 × 64 with P<sub>1</sub> and the
+    blocky blob becomes a crisp blob — still a blob. Only raising the order brings the beam back, and then a finer
+    mesh is worth having to resolve the sharper field it produces.
+  </p>
+  <p>
+    Compare with discrete ordinates, where the mesh and the directions fight each other. Here they do not:
+    P<sub>N</sub> has no ray effect and no streaks to hide, so a finer mesh never makes it look worse — it just
+    costs more cells.
+  </p>
+</details>
+
+<script>
+(() => {
+  const demo = document.getElementById("pnSimple");
+  if (!demo || demo.dataset.initialized === "true") return;
+  demo.dataset.initialized = "true";
+  const svgNS = "http://www.w3.org/2000/svg";
+  const $ = id => document.getElementById(id);
+
+  const REAL = { x: 97, y: 162 }, MODEL = { x: 283, y: 162 }, RADIUS = 66;
+  const SOURCE = { x: 632, y: 196 };
+  const FIELD = { x: 592, y: 86, w: 160, h: 152, res: 2 };          // panel 4, drawn at 2 px per SVG unit
+  const falloffInv = k => k >= 1 ? 0 : 45 * Math.pow(1 / k - 1, 1 / 1.6);
+  const fieldCanvas = document.createElement("canvas");
+  fieldCanvas.width = FIELD.w * FIELD.res; fieldCanvas.height = FIELD.h * FIELD.res;
+  const SAMPLES = 240;
+  const angles = Array.from({ length: SAMPLES }, (_, i) => i / SAMPLES * Math.PI * 2);
+
+  // example light patterns at one point (brightness as a function of direction)
+  const scenes = {
+    smooth: { name: "a smooth glow",                    fn: a => 0.82 + 0.10 * Math.cos(a - 0.5) },
+    side:   { name: "light mostly coming from one side", fn: a => 0.42 + 0.42 * Math.max(0, Math.cos(a + 0.35)) + 0.08 * Math.cos(2 * a) },
+    beam:   { name: "a sharp beam",                     fn: a => 0.10 + Math.exp(13 * (Math.cos(a + 0.45) - 1)) }
+  };
+  const MESHES = [16, 32, 64];
+  let scene = "smooth", order = 1, meshLevel = 1;
+
+  // truncated Fourier series: the 2-D stand-in for a P_N spherical-harmonics expansion
+  function approximate(fn, N) {
+    const v = angles.map(fn), a = [], b = [];
+    for (let k = 0; k <= N; k++) {
+      let ak = 0, bk = 0;
+      angles.forEach((t, i) => { ak += v[i] * Math.cos(k * t); bk += v[i] * Math.sin(k * t); });
+      a[k] = 2 * ak / SAMPLES; b[k] = 2 * bk / SAMPLES;
+    }
+    const series = t => { let s = a[0] / 2; for (let k = 1; k <= N; k++) s += a[k] * Math.cos(k * t) + b[k] * Math.sin(k * t); return s; };   // may go negative
+    const mags = [Math.abs(a[0] / 2)]; for (let k = 1; k <= N; k++) mags.push(Math.hypot(a[k], b[k]));   // how much of each harmonic the fit uses
+    return { fn: series, mags };
+  }
+  const clampPos = f => t => Math.max(0, f(t)), negPart = f => t => Math.max(0, -f(t));
+  const polarPath = (fn, cx, cy, scale, rot = 0, n = SAMPLES) => Array.from({ length: n }, (_, i) => {
+    const t = i / n * Math.PI * 2, r = Math.max(0, fn(t - rot)) * scale;
+    return (i ? "L" : "M") + (cx + Math.cos(t) * r).toFixed(1) + "," + (cy + Math.sin(t) * r).toFixed(1);
+  }).join(" ") + " Z";
+  const setPath = (el, d) => { el.setAttribute("d", d); el.style.d = `path("${d}")`; };
+
+  function drawRays(fn, scale) {
+    $("pnSimpleRays").replaceChildren(...angles.filter((_, i) => i % 12 === 0).map(t => {
+      const l = document.createElementNS(svgNS, "line"), r = fn(t) * scale;
+      l.setAttribute("x1", REAL.x); l.setAttribute("y1", REAL.y);
+      l.setAttribute("x2", (REAL.x + Math.cos(t) * r).toFixed(1)); l.setAttribute("y2", (REAL.y + Math.sin(t) * r).toFixed(1));
+      l.setAttribute("class", "pn-ray-line"); return l;
+    }));
+  }
+
+  // 3: what the model holds in each cell. Light reaches a cell from the hot cell's direction, so the true
+  //    local pattern is a spike pointing away from the source; the model keeps its order-N truncation
+  //    (a leaning blob at P₁, a narrow lobe at P₇), scaled by how much light arrives there.
+  const mesh = { x: 392, y: 86, cols: 5, rows: 5, w: 32, h: 30.4 };
+  const MESH_SRC = { x: 472, y: 222.8 };
+  const falloff = r => 1 / (1 + Math.pow(r / 45, 1.6));
+  function drawMesh(fn, modelFn, N) {
+    const out = [];
+    // order-N truncation of a spike (Dirichlet kernel), clamped and normalised
+    let spike = t => { let v = 1; for (let k = 1; k <= N; k++) v += 2 * Math.cos(k * t); return Math.max(0, v); };
+    const spk = spike(0); spike = (f => t => f(t) / spk)(spike);
+    const peakReal = Math.max(...angles.map(fn));
+    for (let row = 0; row < mesh.rows; row++) for (let col = 0; col < mesh.cols; col++) {
+      const cx = mesh.x + (col + .5) * mesh.w, cy = mesh.y + (row + .5) * mesh.h;
+      const dx = cx - MESH_SRC.x, dy = cy - MESH_SRC.y, r = Math.hypot(dx, dy), here = col === 2 && row === 4;
+      const p = document.createElementNS(svgNS, "path");
+      if (here) {
+        p.setAttribute("d", polarPath(t => modelFn(t) / peakReal, cx, cy, 13, 0, 60));
+        p.style.fillOpacity = ".32"; p.style.strokeWidth = "1.7";
+      } else {
+        const dir = Math.atan2(dy, dx), v = Math.min(1, modelFn(dir) / peakReal) * falloff(r);
+        const size = v < 0.015 ? 0 : 3 + 10 * Math.sqrt(Math.min(1, 1.6 * v));
+        if (!size) { const d = document.createElementNS(svgNS, "circle"); d.setAttribute("cx", cx); d.setAttribute("cy", cy); d.setAttribute("r", 1.4); d.setAttribute("class", "pn-mini-dot"); out.push(d); continue; }
+        p.setAttribute("d", polarPath(spike, cx, cy, size, dir, 60));
+      }
+      p.setAttribute("class", "pn-mini-shape");
+      out.push(p);
+    }
+    $("pnSimpleMeshShapes").replaceChildren(...out);
+  }
+
+  const label = n => ({ 1: "P₁", 3: "P₃", 5: "P₅", 7: "P₇" })[n], L0 = label;
+
+  const THRESHOLD = 0.2;   // the contour of reality is drawn where brightness drops to 20 % of the beam's peak
+  function drawField(modelFn, realFn, M) {
+    const cell = FIELD.w / M, peak = Math.max(...angles.map(realFn));
+    const lut = Array.from({ length: 720 }, (_, i) => Math.min(1, modelFn(i / 720 * 2 * Math.PI) / peak));
+    const ctx = fieldCanvas.getContext("2d"), W = fieldCanvas.width, H = fieldCanvas.height;
+    const img = ctx.createImageData(W, H), d = img.data, res = FIELD.res, buf = new Float32Array(W * H);
+    const sx = (SOURCE.x - FIELD.x) * res, sy = (SOURCE.y - FIELD.y) * res;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const dx = x - sx, dy = y - sy, r = Math.hypot(dx, dy) / res;
+      let a = Math.atan2(dy, dx); if (a < 0) a += 2 * Math.PI;
+      buf[y * W + x] = lut[Math.floor(a / (2 * Math.PI) * 720) % 720] * falloff(r);
+    }
+    // the solver only knows one value per cell: average into the chosen mesh
+    const cp = cell * res, rows = Math.ceil(H / cp);
+    for (let cy = 0; cy < rows; cy++) for (let cx = 0; cx < M; cx++) {
+      const x0 = Math.round(cx * cp), y0 = Math.round(cy * cp), x1 = Math.min(W, Math.round((cx + 1) * cp)), y1 = Math.min(H, Math.round((cy + 1) * cp));
+      let sum = 0, n = 0;
+      for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { sum += buf[y * W + x]; n++; }
+      const c = Math.pow(Math.min(1, sum / Math.max(1, n)), 0.6), hot = Math.min(1, c * 1.25);
+      for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+        const i = (y * W + x) * 4;
+        d[i] = 217 + (235 - 217) * hot; d[i + 1] = 138 + (104 - 138) * hot; d[i + 2] = 31 + (52 - 31) * hot; d[i + 3] = Math.min(255, 255 * c * 1.1);
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    const grid = [], op = M === 16 ? .55 : M === 32 ? .35 : .2, mkl = a => { const l = document.createElementNS(svgNS, "line"); for (const k in a) l.setAttribute(k, a[k]); return l; };
+    for (let i = 1; i < M; i++) grid.push(mkl({ x1: (FIELD.x + i * cell).toFixed(1), y1: FIELD.y, x2: (FIELD.x + i * cell).toFixed(1), y2: FIELD.y + FIELD.h }));
+    for (let j = 1; j < rows; j++) grid.push(mkl({ x1: FIELD.x, y1: (FIELD.y + j * cell).toFixed(1), x2: FIELD.x + FIELD.w, y2: (FIELD.y + j * cell).toFixed(1) }));
+    const g = $("pnSimpleFieldGrid"); g.replaceChildren(...grid); g.style.opacity = op;
+    $("pnSimpleField").setAttribute("href", fieldCanvas.toDataURL("image/png"));
+    // reality: where true-pattern(φ) × falloff(r) = THRESHOLD × peak
+    setPath($("pnSimpleTruth"), polarPath(t => falloffInv(THRESHOLD * peak / Math.max(realFn(t), 1e-6)), SOURCE.x, SOURCE.y, 1));
+  }
+
+  // the finest harmonic order N uses: a flower with 2N equal petals (the finer the petals, the finer
+  //    the detail the model can describe). Depends on N only.
+  const kernelLobe = N => t => Math.abs(Math.cos(N * t));
+  // the harmonics the model uses at this order (circle, 2 petals, 4, …), drawn with opacity = solved weight
+  function drawTerms(mags, N) {
+    const top = Math.max(...mags, 1e-6), sub = "₀₁₂₃₄₅₆₇";
+    const ks = N <= 3 ? Array.from({ length: N + 1 }, (_, k) => k) : [0, 1, -1, N];   // -1 = ellipsis
+    const out = [], slotW = 148 / ks.length, x0 = 283 - 74 + slotW / 2, y = 252;
+    ks.forEach((k, i) => {
+      const x = x0 + i * slotW;
+      if (k < 0) { const t = document.createElementNS(svgNS, "text"); t.setAttribute("x", x); t.setAttribute("y", y + 4); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "pn-sub"); t.textContent = "…"; out.push(t); return; }
+      const w = mags[k] / top, p = document.createElementNS(svgNS, "path");
+      p.setAttribute("d", polarPath(k === 0 ? () => 0.8 : t => Math.abs(Math.cos(k * t)), x, y, 11, 0, 120));
+      p.setAttribute("class", "pn-term"); p.style.fillOpacity = (0.05 + 0.45 * w).toFixed(2); p.style.strokeOpacity = (0.25 + 0.75 * w).toFixed(2);
+      const t = document.createElementNS(svgNS, "text"); t.setAttribute("x", x); t.setAttribute("y", y + 20); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "pn-term-label");
+      t.textContent = "a" + sub[k];
+      const v = document.createElementNS(svgNS, "text"); v.setAttribute("x", x); v.setAttribute("y", y + 29); v.setAttribute("text-anchor", "middle"); v.setAttribute("class", "pn-term-label");
+      v.textContent = w < 0.005 ? "≈0" : w.toFixed(1); out.push(v);
+      if (i > 0) { const plus = document.createElementNS(svgNS, "text"); plus.setAttribute("x", x - slotW / 2); plus.setAttribute("y", y + 4); plus.setAttribute("text-anchor", "middle"); plus.setAttribute("class", "pn-sub"); plus.textContent = "+"; out.push(plus); }
+      out.push(p, t);
+    });
+    $("pnSimpleTerms").replaceChildren(...out);
+  }
+  function render() {
+    const realFn = scenes[scene].fn, { fn: rawFn, mags } = approximate(realFn, order), modelFn = clampPos(rawFn);
+    const scale = RADIUS / Math.max(...angles.map(realFn));
+    const negDepth = -Math.min(...angles.map(rawFn)) / Math.max(...angles.map(realFn));
+    setPath($("pnSimpleReal"), polarPath(realFn, REAL.x, REAL.y, scale));
+    setPath($("pnSimpleKernel"), polarPath(kernelLobe(order), MODEL.x, MODEL.y, RADIUS * 0.98)); // blue: depends on N only
+    setPath($("pnSimpleGhost"), polarPath(realFn, MODEL.x, MODEL.y, scale));                   // dashed: the light
+    setPath($("pnSimpleModel"), polarPath(modelFn, MODEL.x, MODEL.y, scale));                  // amber: the fit (positive part)
+    setPath($("pnSimpleModelNeg"), polarPath(negPart(rawFn), MODEL.x, MODEL.y, scale));       // dotted: where the series goes negative
+    drawRays(realFn, scale);
+
+    // the mesh glyphs and the rendered field use the model normalised to its own peak
+    const peak = Math.max(...angles.map(modelFn), 0.001), unit = t => modelFn(t) / peak;
+    const M = MESHES[meshLevel];
+    drawMesh(realFn, modelFn, order);
+    // 4: the field around a hot spot. Brightness in a direction = the model's pattern in that
+    //    direction × falloff with distance. Same total energy as reality, so a beam smeared by
+    //    P₁ comes out dim and wide. Reality is drawn as a dashed contour of the true field.
+    drawField(modelFn, realFn, M);
+    $("pnSimpleCellText").textContent = order === 1 ? "P₁: leaning blobs everywhere" : order === 3 ? "P₃: wide lobes point away" : L0(order) + ": narrow lobes point away";
+    $("pnSimpleMeshText").textContent = `dashed = reality · ${M}×${M} cells`;
+
+    const L = label(order);
+    $("pnSimpleOrderOutput").textContent = L;
+    drawTerms(mags, order);
+    $("pnSimpleFitText").textContent = scene === "smooth" && order > 1 ? "fit = a₀ alone; the rest ≈ 0" : "fit = weighted sum of these";
+    $("pnSimpleFieldText").textContent = M === 16
+      ? (scene === "smooth" ? "even glow, blocky cells" : scene === "beam" ? (order === 1 ? "P₁: dim blob, blocky" : L + ": beam, blocky cells") : (order === 1 ? "P₁: leans right, blocky" : L + ": close, blocky cells"))
+      : (scene === "smooth" ? "an even glow, like reality"
+      : scene === "beam" ? (order === 1 ? "P₁: beam → a dim blob" : order === 3 ? "P₃: a wide, wobbly beam" : L + ": beam back, with ripples")
+      : (order === 1 ? "P₁: leans the right way" : L + ": close to reality"));
+    const meshNote = M === 16 ? " On a 16×16 mesh the answer is blocky — but no less smooth in angle: the mesh cannot give P₁ a beam back."
+                   : M === 64 ? " A 64×64 mesh sharpens the cells, not the angles: the shape stays exactly as smooth. Only a higher order changes it."
+                   : "";
+    $("pnSimpleStatus").textContent = {
+      smooth: order === 1 ? "For a smooth glow the cheap P₁ description is almost exact — this is the everyday case in furnaces and flames."
+                          : L + " adds detail a smooth glow does not need: the fit stays the same circle — more computation for the same answer. Try the beam to see the order matter.",
+      side:   order === 1 ? "P₁ keeps the overall brightness and the main direction of the light; the finer shape is smoothed away."
+                          : L + " follows the one-sided pattern closely — at the price of more computation in every cell.",
+      beam:   order === 1 ? "P₁ turns a sharp beam into a soft blob: cheap, but it cannot make beams or shadows."
+                          : L + " starts to recover the beam — but every cell now has to carry a lot more information."
+    }[scene] + meshNote + (negDepth > 0.04 ? " The small dotted lobes are where the fit goes negative — light that isn't there, a known artefact of cutting the series off." : "");
+    $("pnSimpleBottom").textContent = order === 1 ? "P₁: smooth and cheap — ideal when the light is already diffuse"
+                                                  : L + ": more detail in every cell — but more computation";
+  }
+
+  $("pnSimpleOrder").addEventListener("input", e => { order = +e.target.value; render(); });
+  $("pnSimpleMeshes").addEventListener("click", e => {
+    const b = e.target.closest("[data-mesh]"); if (!b) return;
+    meshLevel = +b.dataset.mesh;
+    demo.querySelectorAll("#pnSimpleMeshes button").forEach(x => x.classList.toggle("is-active--mesh", x === b));
+    render();
+  });
+  $("pnSimpleScenes").addEventListener("click", e => {
+    const b = e.target.closest("[data-scene]"); if (!b) return;
+    scene = b.dataset.scene;
+    demo.querySelectorAll("#pnSimpleScenes button").forEach(x => x.classList.toggle("is-active", x === b));
+    render();
+  });
+  render();
+})();
+</script>

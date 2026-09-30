@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Radiation: The Teapot, the Dragon, and Ray Tracing | Babak Goshayeshi, Ph.D.</title>
+  <meta name="description" content="A brief, non-textbook tour of thermal radiation — absorption, reflection, transmission, the radiative transfer equation, the methods people use to solve it, and why ray tracing won." />
+  <meta name="author" content="Babak Goshayeshi" />
+  <link rel="canonical" href="https://bgoshayeshi.com/blog/radiation-modeling/" />
+
+  <!-- Open Graph / LinkedIn -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Radiation: The Teapot, the Dragon, and Ray Tracing" />
+  <meta property="og:description" content="A brief, non-textbook tour of thermal radiation — absorption, reflection, transmission, the radiative transfer equation, the methods people use to solve it, and why ray tracing won." />
+  <meta property="og:url" content="https://bgoshayeshi.com/blog/radiation-modeling/" />
+  <meta property="og:image" content="https://bgoshayeshi.com/blog/radiation-modeling/og-image.png" />
+  <meta property="og:image:width" content="2400" />
+  <meta property="og:image:height" content="1260" />
+  <meta property="article:published_time" content="2026-09-29" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://bgoshayeshi.com/blog/radiation-modeling/og-image.png" />
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Radiation: The Teapot, the Dragon, and Ray Tracing",
+    "description": "A brief, non-textbook tour of thermal radiation — absorption, reflection, transmission, the radiative transfer equation, the methods people use to solve it, and why ray tracing won.",
+    "datePublished": "2026-09-29",
+    "url": "https://bgoshayeshi.com/blog/radiation-modeling/",
+    "image": "https://bgoshayeshi.com/blog/radiation-modeling/og-image.png",
+    "author": {
+      "@type": "Person",
+      "name": "Babak Goshayeshi",
+      "honorificSuffix": "Ph.D.",
+      "url": "https://bgoshayeshi.com/"
+    }
+  }
+  </script>
+
+  <style>
+    /* article layout */
+    .post { padding: 72px 0 84px; }
+    .post__head { max-width: 760px; margin: 0 auto 40px; }
+    .post__head h1 { font-size: clamp(30px, 4vw, 46px); margin: 0 0 18px; letter-spacing: -0.02em; }
+    .post__meta { font-family: var(--mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .post__meta a { color: var(--clay-deep); }
+
+    .post__content { max-width: 760px; margin: 0 auto; font-size: 17.5px; color: var(--ink-soft); }
+    .post__content h2 { font-size: 27px; margin: 44px 0 14px; color: var(--ink); }
+    .post__content h3 { font-size: 21px; margin: 34px 0 12px; color: var(--ink); }
+    .post__content h4 { font-size: 17px; margin: 26px 0 10px; color: var(--ink); }
+    .post__content p { margin: 0 0 20px; }
+    .post__content strong { color: var(--ink); font-weight: 600; }
+    .post__content ul, .post__content ol { margin: 0 0 20px; padding-left: 22px; }
+    .post__content li { margin-bottom: 8px; }
+    .post__content a { color: var(--clay-deep); border-bottom: 1px solid var(--line-strong); padding-bottom: 1px; }
+    .post__content a:hover { border-color: var(--clay); }
+    .post__content code { font-family: var(--mono); font-size: 0.88em; background: var(--card); border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; }
+
+    .post__note {
+      border-left: 3px solid var(--clay); background: var(--paper-2);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 16px 20px; margin: 0 0 20px; font-size: 16px;
+    }
+
+    .post__footer { max-width: 760px; margin: 48px auto 0; padding-top: 28px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+
+    /* accordion */
+    details.accordion { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); padding: 0 22px; margin: 2.2em 0; }
+    details.accordion summary { cursor: pointer; font-family: var(--mono); font-size: 15px; color: var(--ink); padding: 16px 0; }
+    details.accordion summary::marker { color: var(--clay-deep); }
+    details.accordion summary:hover { color: var(--clay-deep); }
+    details.accordion[open] summary { border-bottom: 1px solid var(--line); }
+    details.accordion > p:last-of-type { margin-bottom: 1.4em; }
+
+    /* ================ article components ================
+       Diagram tokens mapped onto the site palette. Blues are "matter"
+       (surfaces, meshes); amber is light. Kept distinct from the clay accent. */
+    .post {
+      --axis:           var(--line-strong);
+      --code-bg:        var(--paper-2);
+      --diagram-fill:   #9ec5f4;
+      --diagram-strong: #2a78d6;
+      --ray:            #d98a1f;
+      --heat:           #eb6834;
+    }
+
+    figure { margin: 28px 0; }
+    figcaption { font-family: var(--mono); font-size: 12.5px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 18px;
+    }
+    .panel-pair { display: flex; flex-wrap: wrap; gap: 18px; }
+    .panel-pair > div { flex: 1 1 300px; min-width: 0; }
+    .panel-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+    .panel-sub { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .turntable { width: 100%; max-width: 600px; height: auto; display: block; margin: 0 auto; border-radius: var(--radius-sm); }
+    /* pros / cons */
+    .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 0 0 22px; }
+    .pc > div { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 18px; font-size: 15.5px; }
+    .pc h4 { margin: 0 0 8px !important; font-family: var(--mono); font-size: 12.5px !important; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .pc ul { margin: 0 !important; padding-left: 18px !important; }
+    .pc li { margin-bottom: 6px !important; }
+    @media (max-width: 640px) { .pc { grid-template-columns: 1fr; } }
+
+    /* display equations */
+    .eq {
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      margin: 1.3rem 0; padding: 0 3.2em;
+      font-family: "STIX Two Math", "Cambria Math", "Times New Roman", Georgia, serif;
+      font-size: 1.12em; color: var(--ink);
+      overflow-x: auto;
+    }
+    .eq .eq-no {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      color: var(--muted);
+      font: 12.5px/1 var(--mono);
+    }
+    .eq var, .mvar {
+      font-family: "STIX Two Math", "Cambria Math", "Times New Roman", Georgia, serif;
+      font-style: italic;
+    }
+    .eq sub { font-size: .68em; font-style: normal; }
+    .eq .op { padding: 0 .3em; }
+    .eq .fn { font-style: normal; }
+    .eq .big { font-size: 1.45em; font-weight: 300; line-height: 1; vertical-align: middle; }
+    .eq .int { font-size: 1.6em; font-weight: 300; line-height: 1; vertical-align: middle; margin: 0 .05em; }
+    .eq .int sub { font-size: .42em; vertical-align: -0.9em; }
+    .eq .hat { font-weight: 600; font-style: normal; }
+    .eq .frac {
+      display: inline-flex; flex-direction: column; align-items: center;
+      margin: 0 .18em; text-align: center; vertical-align: middle;
+    }
+    .eq .frac .num, .eq .frac .den { padding: .05em .3em; line-height: 1.25; }
+    .eq .frac .den { border-top: 1px solid currentColor; }
+    .eq .term { padding: .12em .3em; border-radius: 6px; }
+    .eq .term--att  { background: color-mix(in srgb, var(--diagram-strong) 12%, transparent); }
+    .eq .term--emit { background: color-mix(in srgb, var(--heat) 14%, transparent); }
+    .eq .term--scat { background: color-mix(in srgb, var(--ray) 16%, transparent); }
+    .term-key { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: -6px 0 22px; font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft); }
+    .term-key .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+    /* shown only if a per-model include fails to load */
+    .include-fallback { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================ NAV -->
+  <header class="nav" id="nav">
+    <div class="wrap nav__inner">
+      <a class="brand" href="/" aria-label="Babak Goshayeshi, home">
+        <span class="brand__mark"><img class="brand__logo" src="/assets/dragonfly_logo2.png" alt="" /></span>
+        Babak&nbsp;Goshayeshi<span style="color:var(--muted);font-weight:400">, Ph.D.</span>
+      </a>
+      <nav class="nav__links" id="navLinks" aria-label="Primary">
+        <a href="/#about">About</a>
+        <a href="/#ventures">Platforms</a>
+        <a href="/#work">Work</a>
+        <a href="/#experience">Experience</a>
+        <a href="/#contact">Contact</a>
+      </nav>
+      <div class="nav__cta">
+        <a class="nav__blog" href="/blog/">Blog</a>
+        <a class="btn btn--primary" href="/#contact">Get in touch</a>
+      </div>
+      <button class="nav__toggle" id="navToggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <article class="post">
+      <div class="wrap">
+
+        <header class="post__head reveal">
+          <h1>Radiation: The Teapot, the Dragon, and Ray Tracing</h1>
+          <p class="post__meta">September 29, 2026 ·
+            <a href="/blog/">← All posts</a></p>
+        </header>
+
+        <div class="post__content">
+
+<p>
+  I spend most of my academic carrer on Radiationn, its concept, the modeling of it, and the numerical implementation of it!
+   How I get into it, probably another story. 
+   Radiation is probably one of my favourite subjects in physics. It seems so easy to understand, yet it is
+  very complex. It has the scariest equations, and people keep finding easy ways (if you understand them) to implement it.
+</p>
+<p>
+  The poruse of this article is not go deep, text-book style into the Radiation modeling, just the fun parts.
+  
+  My hope is that once you know this, you get as excited as I get when seeing its magic in games, in animation, and now in AI. 
+  Also, it can be your next topic for a dinner-table conversation!
+</p>
+
+<h2>Radiation Principles</h2>
+<p>
+  Radiation is a ray (or a wave) of energy. When it interacts with matter, three things can happen:
+</p>
+<ul>
+  <li><strong>Absorbed</strong> — a very black surface absorbs all the light.</li>
+  <li><strong>Reflected</strong> — a mirror reflects all the light.</li>
+  <li><strong>Transmitted</strong> — a glass window transmits most of the light.</li>
+</ul>
+
+<!-- radiation principles, kept in its own file and pulled in by the include loader below -->
+<div data-include="assets/principles-three-fates.html">
+  <p class="include-fallback">Fig. 1 — interactive diagram of what happens when light meets matter:
+    <a href="assets/principles-three-fates.html">open it directly</a>.</p>
+</div>
+
+<p>
+  In all of the examples above, all three things are happening at the same time — but one of them is
+  dominant. Energy is conserved, so the three fractions add up:
+</p>
+
+<div class="eq">
+  <span><var>α</var><span class="op">+</span><var>ρ</var><span class="op">+</span><var>τ</var><span class="op">=</span>1</span>
+  <span class="eq-no">(1)</span>
+</div>
+
+<p>
+  One thing that is important — and confusing — is the difference between <strong>reflection</strong> and
+  <strong>emission</strong>. Reflection is when a ray of light hits a surface and bounces back: the light you
+  see is the light that arrived. Emission is when matter produces light of its own.
+</p>
+<p>
+  What is emission? When matter gets “excited” (by heat, by absorbing light, by an electric current, and so
+  on), it emits its own light signature. A glowing stove element, the sun, a candle flame, an LED — they are
+  not bouncing anybody else's light back at you; they are the source.
+</p>
+<!-- DRAFT NOTE (Babak): the README describes an apple's colour and a car's paint colour as *emission*.
+     Physically, both are *diffuse reflection* — the pigment absorbs the other wavelengths and scatters the
+     rest back. The passage below is written that way; the apple and car do emit, but in the infrared
+     (thermal emission at room temperature), which is the part radiation models care about. Revert if you
+     prefer the original framing. -->
+<p>
+  Colour is where people mix the two up. An apple looks red or green not because it emits red or green light,
+  but because its skin absorbs the other colours and reflects those back — that is still reflection, just the
+  diffuse kind, scattered in every direction rather than in one clean bounce. Look at a very clean, polished
+  car and you can see both kinds of reflection at once: you see the objects around it reflected “as is”
+  (specular, mirror-like), and you see the paint's own colour (diffuse). What the car — and the apple, and
+  you — genuinely <em>emit</em> is in the infrared: every object above absolute zero glows at a wavelength set
+  by its temperature. That thermal emission is exactly what radiation modelling in a boiler or a furnace is
+  about; the visible colour is just the part our eyes happen to catch.
+</p>
+
+<p>
+  It is time to introduce you to my favourite test model for radiation modelling, the
+  <a href="https://en.wikipedia.org/wiki/Utah_teapot" target="_blank" rel="noopener noreferrer">Utah teapot</a>:
+</p>
+
+<figure>
+  <div class="card">
+    <img class="turntable" src="assets/utah-teapot.gif" width="600" height="400" loading="lazy"
+         alt="Turntable animation of the Utah teapot, rendered in flat-shaded blue with a fixed light, rotating slowly." />
+  </div>
+  <figcaption>Fig. 2 — The Utah teapot, drawn in 1975 by Martin Newell at the University of Utah as a set of
+  Bézier patches. It has become the “hello world” of rendering: whenever someone tests a new lighting
+  method, sooner or later a teapot shows up. Mesh: <a href="https://commons.wikimedia.org/wiki/File:Utah_teapot_(solid).stl" target="_blank" rel="noopener noreferrer">Nik Clark, CC0</a>;
+  rendered for this post with a fixed light and a simple absorbed-plus-reflected shading model — the same
+  ideas as Fig. 1.</figcaption>
+</figure>
+
+<p>
+  Why a teapot? Because it is the perfect awkward object. It is round, so light grazes it at every angle
+  and you get soft shading gradients. It is <em>concave</em> in places — under the spout, inside the
+  handle, where the lid meets the body — so parts of the teapot cast shadows and reflect light onto
+  <em>other parts of the teapot</em>. Any method that only handles direct light from the source will get
+  those inter-reflections wrong, and you can see it immediately. It also has a shiny surface with a spout
+  to give specular highlights, a saddle-shaped handle for tricky normals, and it was, conveniently, sitting
+  on Newell's kitchen table when he needed a shape to test. Simple enough to model by hand in 1975; hard
+  enough to still be useful fifty years later.
+</p>
+
+<p>
+  My other favourite test model is the
+  <a href="https://graphics.stanford.edu/data/3Dscanrep/" target="_blank" rel="noopener noreferrer">Stanford dragon</a>:
+</p>
+
+<figure>
+  <div class="card">
+    <img class="turntable" src="assets/stanford-dragon.gif" width="600" height="400" loading="lazy"
+         alt="Turntable animation of the Stanford dragon, rendered in flat-shaded blue with a fixed light, rotating slowly." />
+  </div>
+  <figcaption>Fig. 3 — The Stanford dragon, a 3D scan of a small figurine released by the Stanford Computer
+  Graphics Laboratory in 1996. The full model is 871,414 triangles; this turntable uses the 202,520-triangle
+  version. Model courtesy of the <a href="https://graphics.stanford.edu/data/3Dscanrep/" target="_blank" rel="noopener noreferrer">Stanford 3D Scanning Repository</a>.</figcaption>
+</figure>
+
+<p>
+  If the teapot is the friendly test, the dragon is the stress test. It is a <em>scanned</em> object, not a
+  hand-made one, so its surface is a dense, irregular triangle mesh — hundreds of thousands of them, with
+  scales, claws and a curled tail. Two things make it valuable for radiation modelling. First, its
+  geometry is full of tight concavities: between the scales, under the jaw, inside the curl of the tail.
+  Light bounces around in there many times before it escapes, so the model punishes any method that
+  cannot handle multiple reflections. Second, it is big. A method that can handle the dragon at a useful
+  speed can handle a real industrial geometry — a boiler full of tubes, an engine, a city block — and
+  that is what people actually want to simulate. It is also just fun to render; a dragon in a rendering
+  paper is almost a tradition at this point.
+</p>
+
+<h2>Radiation Modelling</h2>
+<p>
+  Here it is, straight out of the box — the real-world, holy-grail equation of radiation, the
+  <strong>radiative transfer equation</strong> (RTE). It says how the intensity <span class="mvar">I</span> of
+  light at wavelength λ changes as you walk a distance <span class="mvar">s</span> along a ray pointing in
+  direction <span class="mvar">ŝ</span>:
+</p>
+
+<div class="eq">
+  <span>
+    <span class="frac"><span class="num">d<var>I</var><sub>λ</sub></span><span class="den">d<var>s</var></span></span>
+    <span class="op">=</span>
+    <span class="term term--att">−(<var>κ</var><sub>λ</sub><span class="op">+</span><var>σ</var><sub>λ</sub>)&thinsp;<var>I</var><sub>λ</sub>(<var>s</var>,&thinsp;<span class="hat">ŝ</span>)</span>
+    <span class="op">+</span>
+    <span class="term term--emit"><var>κ</var><sub>λ</sub>&thinsp;<var>I</var><sub>b,λ</sub>(<var>T</var>)</span>
+    <span class="op">+</span>
+    <span class="term term--scat"><span class="frac"><span class="num"><var>σ</var><sub>λ</sub></span><span class="den">4π</span></span><span class="int">∫<sub>4π</sub></span><var>I</var><sub>λ</sub>(<var>s</var>,&thinsp;<span class="hat">ŝ</span>′)&thinsp;<var>Φ</var>(<span class="hat">ŝ</span>′,&thinsp;<span class="hat">ŝ</span>)&thinsp;d<var>Ω</var>′</span>
+  </span>
+  <span class="eq-no">(2)</span>
+</div>
+<div class="term-key">
+  <span><span class="sw" style="background:color-mix(in srgb, var(--diagram-strong) 30%, transparent)"></span>attenuation: absorbed (κ) + scattered away (σ)</span>
+  <span><span class="sw" style="background:color-mix(in srgb, var(--heat) 32%, transparent)"></span>emission: the medium glows at its temperature <span class="mvar">T</span></span>
+  <span><span class="sw" style="background:color-mix(in srgb, var(--ray) 36%, transparent)"></span>in-scattering: light arriving from every other direction <span class="mvar">ŝ</span>′</span>
+</div>
+
+<p>
+  Read it left to right and it is just Fig. 1 again, written for a point inside a gas instead of a surface:
+  along the ray, light is lost to absorption and to scattering out of the ray; it is gained from the
+  medium's own emission (<span class="mvar">I</span><sub>b</sub> is the blackbody intensity — Planck's law);
+  and it is gained from light that was travelling in <em>other</em> directions and got scattered
+  <em>into</em> this one, weighted by the phase function <span class="mvar">Φ</span>. And you have to solve
+  it for every position, every direction, every wavelength — and for the temperature field, which the
+  radiation itself changes.
+</p>
+
+<p>
+  It seems very complex, right? Yes — and it gets even more complex when it comes to solving it. That
+  last term is an integral over all directions, so the intensity in one direction depends on the
+  intensity in every other direction. It is an integro-differential equation in six dimensions (three in
+  space, two in direction, one in wavelength), and no one solves it exactly except in toy problems. For
+  the past fifty-plus years people have proposed one numerical method after another: Monte Carlo, the
+  zone method, discrete ordinates, spherical harmonics — and the majestic <strong>ray tracing</strong>.
+</p>
+
+<p>I used and implemeted different raditaion models, but here I want to discuss my three favorite ones
+</p>
+
+<h3>1. Discrete Ordinates Method (DOM)</h3>
+<p>
+  Instead of following light in every direction, pick a handful of directions and solve how light travels
+  along each one, cell by cell on the mesh. More directions, more accurate — and more work.
+</p>
+<div class="pc">
+  <div>
+    <h4>Pros</h4>
+    <ul>
+      <li>Fits naturally into a CFD code: same mesh, same solvers.</li>
+      <li>Accuracy is tunable: add directions and it converges.</li>
+    </ul>
+  </div>
+  <div>
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>Ray effect:</strong> with too few directions, a smooth glow turns into streaks.</li>
+      <li>Cost grows with every direction you add.</li>
+    </ul>
+  </div>
+</div>
+
+<p>
+  Try it in Fig. 4: pick a light pattern and change the number of directions.
+</p>
+
+<!-- per-model visualisation, kept in its own file and pulled in by the include loader below -->
+<div data-include="assets/model-discrete-ordinates.html">
+  <p class="include-fallback">Fig. 4 — interactive schematic of the Discrete Ordinates Method:
+    <a href="assets/model-discrete-ordinates.html">open it directly</a>.</p>
+</div>
+
+<h3>2. Spherical Harmonics Method (P<sub>N</sub>)</h3>
+<p>
+  Instead of picking directions, describe the light at each point with a smooth shape built from a few
+  simple patterns (spherical harmonics), then solve for that shape in every cell. The simplest version,
+  P<sub>1</sub>, is by far the most used.
+</p>
+<div class="pc">
+  <div>
+    <h4>Pros</h4>
+    <ul>
+      <li>P<sub>1</sub> is cheap: one extra equation that any CFD code can solve.</li>
+      <li>No ray effect, and very accurate where light is well mixed (large furnaces, sooty flames).</li>
+    </ul>
+  </div>
+  <div>
+    <h4>Cons</h4>
+    <ul>
+      <li>A sharp beam or shadow gets smoothed into a blob.</li>
+      <li>Higher orders get complicated fast.</li>
+    </ul>
+  </div>
+</div>
+
+<p>
+  Try it in Fig. 5: pick a light pattern and change how much detail the method keeps.
+</p>
+
+<!-- per-model visualisation, kept in its own file and pulled in by the include loader below -->
+<div data-include="assets/model-spherical-harmonics.html">
+  <p class="include-fallback">Fig. 5 — interactive schematic of the Spherical Harmonics Method:
+    <a href="assets/model-spherical-harmonics.html">open it directly</a>.</p>
+</div>
+
+
+<h2>Ray Tracing Method</h2>
+<p>
+  Ray tracing does what the name says: fire lots of rays of light, follow each one in a straight line, and
+  at every surface decide its fate with Fig. 1 — absorbed, reflected or transmitted. Add up where the energy
+  lands. The rays are picked at random, which is why it is also called <strong>Monte Carlo</strong> ray tracing
+  (in graphics, path tracing).
+</p>
+<p>
+  Ray tracing is my favourite of all the models, for two reasons above the rest:
+</p>
+<ul>
+  <li><strong>The mesh never gets in the way.</strong> Rays fly in straight lines at any angle, right through
+  the cells; the mesh only counts the energy that passes through. There are no directions to choose and no
+  smearing from cell to cell, so a beam stays a beam on any mesh.</li>
+  <li><strong>It is made for GPUs.</strong> Every ray is independent of every other one, so thousands of them
+  can be traced at the same time, one per GPU thread.</li>
+</ul>
+
+<h3>NVIDIA Tools for Ray Tracing</h3>
+<p>
+  You do not have to build a GPU ray tracer from scratch. The hard, low-level part — organising the
+  geometry so each ray quickly finds what it hits, then walking through it and testing for intersections —
+  is exactly what NVIDIA has spent years optimising:
+</p>
+<ul>
+  <li><a href="https://developer.nvidia.com/optix" target="_blank" rel="noopener noreferrer"><strong>NVIDIA OptiX</strong></a>
+  — a CUDA-based ray-tracing framework. It builds the acceleration structures and runs the traversal and
+  intersection tests, on the dedicated ray-tracing cores of RTX GPUs when they are available. You only write
+  small programs for what happens when a ray hits something — which is where Fig. 1 comes in: absorb,
+  reflect or transmit.</li>
+  <li><a href="https://github.com/NVIDIA/optix-sdk" target="_blank" rel="noopener noreferrer"><strong>OptiX SDK</strong></a>
+  — the headers, examples and sample applications to start from.</li>
+  <li><a href="https://raytracing-docs.nvidia.com/" target="_blank" rel="noopener noreferrer"><strong>NVIDIA ray-tracing documentation</strong></a>
+  — the programming guide and API reference.</li>
+</ul>
+<p>
+  Together they take care of the plumbing, so you can spend your time on the physics.
+</p>
+<div class="pc">
+  <div>
+    <h4>Pros</h4>
+    <ul>
+      <li>Works with any shape and any surface — mirrors, glass, teapots, dragons.</li>
+      <li>No ray effect, no smearing: add rays and it converges to the exact answer.</li>
+      <li>Every ray is independent, which is exactly what a GPU wants.</li>
+    </ul>
+  </div>
+  <div>
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>Noise:</strong> four times the rays for half the graininess.</li>
+      <li>Slow where light scatters many times (thick smoke, dense gas).</li>
+    </ul>
+  </div>
+</div>
+
+<p>
+  Try it in Fig. 6: pick a light pattern and add rays — the graininess fades, and the sharp beam stays sharp.
+</p>
+
+<!-- per-model visualisation, kept in its own file and pulled in by the include loader below -->
+<div data-include="assets/model-ray-tracing.html">
+  <p class="include-fallback">Fig. 6 — interactive schematic of Monte Carlo ray tracing:
+    <a href="assets/model-ray-tracing.html">open it directly</a>.</p>
+</div>
+<h2>Case Study: The Teapot and the Dragon</h2>
+
+<p>
+  Let's finish where we started. Put the teapot and the dragon in a small room, add a red wall, a green wall,
+  and a single light source — then ask each radiation model the same question: <em>what does the room look like?</em>
+</p>
+
+<!-- closing figure, kept in its own file and pulled in by the include loader below -->
+<div data-include="assets/closing-teapot-dragon.html">
+  <p class="include-fallback">
+    Fig. 7 — the teapot and the dragon rendered with each radiation model:
+    <a href="assets/closing-teapot-dragon.html">open it directly</a>.
+  </p>
+</div>
+
+<p>
+  Play with the figure and compare the models. Then turn off the radiation exchange and drag the divider:
+  the light under the teapot, between the dragon's scales, and the colours reflected onto the floor begin to
+  disappear. Those details come from radiation bouncing around the room.
+</p>
+
+<p>
+  And that is really the point: different models approximate this complicated exchange in different ways.
+  Ray tracing simply follows the rays and their bounces — which is why such a simple idea can reproduce such
+  complex behaviour.
+</p>
+
+<h2>What's Left: Radiation on the GPU</h2>
+
+<p>
+  Choosing a model is only half the story. The other half, which I think is the more important one, is
+  how well that model runs on a GPU. The four images in Fig. 7, each with 16,384 rays per pixel, took about four
+  minutes on a laptop GPU. The same method that was too expensive for engineering a few decades ago is now
+  fast enough to use every day, and the hardware is the reason.
+</p>
+
+<p>
+  But each model meets the GPU differently. Ray tracing is naturally parallel, millions of independent rays,
+  yet those rays wander through the geometry in different directions, and keeping thousands of GPU threads
+  busy together is the real challenge. DOM has many directions that can be solved side by side, but within
+  each direction every cell waits for its upstream neighbour. P<sub>1</sub> becomes a large sparse linear
+  system, where the limit is how fast data moves through memory rather than how fast the GPU can compute.
+  The same physics, three very different optimisation problems.
+</p>
+
+<p>
+  How these models are implemented and optimised on GPUs with CUDA — data layout, memory access, parallel
+  sweeps and acceleration structures — deserves its own article, and I am going to cover it in the next one.
+</p>
+
+        </div>
+
+        <footer class="post__footer reveal">
+          <a class="btn btn--ghost" href="/blog/">← All posts</a>
+          <a class="btn btn--clay" href="/#contact">Get in touch <span class="arrow">→</span></a>
+        </footer>
+
+      </div>
+    </article>
+  </main>
+
+  <!-- ======================================================== FOOTER -->
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <span>© <span id="year">2026</span> Babak Goshayeshi, Ph.D.</span>
+      <span>Built as a static site · hosted on GitHub Pages</span>
+    </div>
+  </footer>
+
+
+  <script>
+    // Include loader: each [data-include] pulls in an HTML fragment (one file per model
+    // visualisation under assets/) and runs any <script> it carries.
+    document.querySelectorAll('[data-include]').forEach(async (host) => {
+      try {
+        const res = await fetch(host.dataset.include);
+        if (!res.ok) throw new Error(res.status);
+        const tpl = document.createElement('template');
+        tpl.innerHTML = await res.text();
+        const scripts = [...tpl.content.querySelectorAll('script')];
+        scripts.forEach(s => s.remove());
+        host.replaceChildren(tpl.content);
+        scripts.forEach(s => { const el = document.createElement('script'); el.textContent = s.textContent; host.appendChild(el); });
+      } catch (err) { console.warn('include failed:', host.dataset.include, err); }
+    });
+  </script>
+  <script src="/script.js"></script>
+  <!-- GoatCounter analytics — include this snippet on every blog post (and any new page) -->
+  <script data-goatcounter="https://bgoshayeshi.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

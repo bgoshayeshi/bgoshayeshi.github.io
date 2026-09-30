@@ -1,0 +1,406 @@
+<!-- Discrete Ordinates (DOM / S_N) — simple visual explainer for a broad audience.
+     Included into index.html by the data-include loader.
+     Every colour token has a literal fallback so the figure renders even if the site stylesheet is missing. -->
+<style>
+  .dom-simple {
+    --dom-blue: #2a78d6; --dom-ray: #d98a1f; --dom-heat: #eb6834;
+    --dom-paper: var(--paper-2, #F5F4EF); --dom-card: var(--card, #FBFAF6); --dom-line: var(--line, #E2DED2);
+    --dom-line-strong: var(--line-strong, #D6D1C4); --dom-ink: var(--ink, #1A1A18); --dom-ink-soft: var(--ink-soft, #3D3C37);
+    --dom-muted: var(--muted, #6B6A62);
+    --dom-mono: var(--mono, "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace);
+    --dom-sans: var(--sans, "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif);
+    margin: 0; border: 1px solid var(--dom-line); border-radius: 8px; overflow: hidden;
+    background: radial-gradient(circle at 14% 40%, color-mix(in srgb, var(--dom-ray) 6%, transparent), transparent 28%), var(--dom-card);
+  }
+  .dom-simple__head { padding: 18px 20px 12px; }
+  .dom-simple__head h4 { margin: 0 0 5px !important; color: var(--dom-ink); font-size: 16px !important; }
+  .dom-simple__head p { margin: 0; color: var(--dom-muted); font: 12px/1.5 var(--dom-mono); max-width: 70ch; }
+  .dom-simple__stage { padding: 4px 14px 14px; }
+  .dom-simple svg { display: block; width: 100%; height: auto; }
+
+  .dom-title { fill: var(--dom-ink); font: 600 13px var(--dom-sans); }
+  .dom-sub { fill: var(--dom-muted); font: 10px var(--dom-mono); }
+  .dom-big-arrow { fill: none; stroke: var(--dom-line-strong); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .dom-circle { fill: var(--dom-paper); stroke: var(--dom-line); stroke-width: 1.1; }
+  .dom-ring { fill: none; stroke: var(--dom-line); stroke-width: .8; opacity: .55; }
+  .dom-ray-line { stroke: var(--dom-ray); stroke-width: 1; stroke-linecap: round; opacity: .22; }
+  .dom-real { fill: none; stroke: var(--dom-ray); stroke-width: 1.6; stroke-dasharray: 4 3; stroke-linejoin: round; }
+  .dom-center { fill: var(--dom-ink); }
+  .dom-real--ghost { stroke-width: 1.3; opacity: .8; }
+  .dom-spoke { stroke: var(--dom-blue); stroke-width: 1.8; stroke-linecap: butt; marker-end: url(#domArrow); opacity: .9; }
+  .dom-spoke.is-on { stroke-width: 2.6; opacity: 1; }
+  .dom-result { stroke: var(--dom-ray); stroke-width: 3.2; stroke-linecap: round; opacity: .85; }
+  .dom-result.is-on { opacity: 1; stroke-width: 4; filter: url(#domSimpleGlow); }
+
+  .dom-domain { fill: var(--dom-paper); stroke: var(--dom-line-strong); stroke-width: 1.2; }
+  .dom-grid { stroke: var(--dom-line); stroke-width: 1; }
+  .dom-grid--faint { opacity: .55; }
+  .dom-mini-dir { stroke: var(--dom-blue); stroke-width: .9; stroke-linecap: butt; marker-end: url(#domArrowMini); opacity: .75; }
+  .dom-mini-dir.is-on { stroke-width: 1.6; opacity: 1; }
+  .dom-mini-spoke { stroke: var(--dom-ray); stroke-width: 1.8; stroke-linecap: round; opacity: .9; }
+  .dom-mini-spoke.is-on { stroke-width: 2.6; opacity: 1; filter: url(#domSimpleGlow); }
+  .dom-selected-cell { fill: color-mix(in srgb, var(--dom-blue) 7%, transparent); stroke: var(--dom-blue); stroke-width: 1.8; }
+
+  .dom-truth { fill: none; stroke: var(--dom-ray); stroke-width: 1.4; stroke-dasharray: 4 3; opacity: .9; }
+  .dom-source { fill: var(--dom-heat); }
+  .dom-source-glow { fill: var(--dom-heat); opacity: .18; }
+  .dom-pill { fill: var(--dom-paper); stroke: var(--dom-line); }
+
+  .dom-simple__controls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px 22px; padding: 14px 18px 18px; border-top: 1px solid var(--dom-line); }
+  .dom-simple button.is-active--mesh { color: #fff; background: var(--dom-blue); border-color: var(--dom-blue); }
+  .dom-control-label { display: block; margin-bottom: 7px; color: var(--dom-muted); font: 600 10px var(--dom-mono); letter-spacing: .09em; text-transform: uppercase; }
+  .dom-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dom-simple button { appearance: none; border: 1px solid var(--dom-line-strong); border-radius: 7px; background: var(--dom-paper); color: var(--dom-ink-soft); padding: 7px 10px; font: 500 11px var(--dom-mono); cursor: pointer; }
+  .dom-simple button.is-active { color: #fff; background: var(--dom-ray); border-color: var(--dom-ray); }
+  .dom-order { display: flex; align-items: center; gap: 10px; }
+  .dom-order output { min-width: 34px; color: var(--dom-blue); font: 700 20px var(--dom-mono); }
+  .dom-order input { width: min(180px, 44vw); accent-color: var(--dom-blue); }
+  @media (max-width: 640px) { .dom-simple__controls { flex-direction: column; } }
+</style>
+
+<figure>
+<div class="dom-simple" id="domSimple">
+  <div class="dom-simple__head">
+    <h4>Discrete Ordinates: follow the light along a few chosen directions</h4>
+    <p id="domSimpleStatus"></p>
+  </div>
+
+  <div class="dom-simple__stage">
+    <svg viewBox="0 0 760 350" role="img" aria-labelledby="domSimpleTitle domSimpleDesc">
+      <title id="domSimpleTitle">How the Discrete Ordinates radiation model works</title>
+      <desc id="domSimpleDesc">Four panels. One: the selected light pattern, how the hot cell emits. Two: the fixed set of directions the model solves along, drawn as equal blue arrows because they do not depend on the light, with an amber line along each showing the brightness read off the pattern. Three: every cell of the mesh carries the same equal blue direction arrows, and an amber line along each shows the brightness the solver finds there; cells that no beam reaches have no amber. Four: the radiation field the model predicts around a hot spot: with few directions it is a star of streaks, the ray effect; with many directions the streaks merge into a smooth glow. A mesh selector shows that a coarse mesh smears the field sideways (false scattering) while a fine one keeps it sharp. The true field is a dashed outline.</desc>
+      <defs>
+        <filter id="domSimpleGlow" filterUnits="userSpaceOnUse" x="0" y="0" width="760" height="350">
+          <feGaussianBlur stdDeviation="2.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <clipPath id="domFieldClip"><rect x="592" y="86" width="160" height="152" rx="7"/></clipPath>
+        <marker id="domArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#2a78d6"/>
+        </marker>
+        <marker id="domArrowMini" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#2a78d6"/>
+        </marker>
+      </defs>
+
+      <!-- 1. light in one cell -->
+      <text x="97" y="30" text-anchor="middle" class="dom-title">1. Selected light pattern</text>
+      <text x="97" y="46" text-anchor="middle" class="dom-sub">how the hot cell emits</text>
+      <circle cx="97" cy="162" r="74" class="dom-circle"/>
+      <circle cx="97" cy="162" r="49" class="dom-ring"/>
+      <g id="domSimpleRays"></g>
+      <path id="domSimpleReal" class="dom-real" d=""/>
+      <circle cx="97" cy="162" r="4" class="dom-center"/>
+      <text x="97" y="258" text-anchor="middle" class="dom-sub">brightness by direction</text>
+      <text x="97" y="272" text-anchor="middle" class="dom-sub">dashed = reality, as in (4)</text>
+
+      <path d="M182 161 H208 M201 155 L208 161 L201 167" class="dom-big-arrow"/>
+
+      <!-- 2. keep a few directions -->
+      <text x="283" y="30" text-anchor="middle" class="dom-title">2. Model directions</text>
+      <text x="283" y="46" text-anchor="middle" class="dom-sub">a fixed set, whatever the light</text>
+      <circle cx="283" cy="162" r="74" class="dom-circle"/>
+      <circle cx="283" cy="162" r="49" class="dom-ring"/>
+      <path id="domSimpleGhost" class="dom-real dom-real--ghost" d=""/>
+      <g id="domSimpleSpokes"></g>
+      <circle cx="283" cy="162" r="4" class="dom-center"/>
+      <text id="domSimpleCountText" x="283" y="258" text-anchor="middle" class="dom-sub">8 directions, all equal</text>
+      <text x="283" y="272" text-anchor="middle" class="dom-sub">amber = brightness along each</text>
+
+      <path d="M368 161 H394 M387 155 L394 161 L387 167" class="dom-big-arrow"/>
+
+      <!-- 3. every cell -->
+      <text x="472" y="30" text-anchor="middle" class="dom-title">3. Solving in every cell</text>
+      <text x="472" y="46" text-anchor="middle" class="dom-sub">brightness found along each</text>
+      <rect x="392" y="86" width="160" height="152" rx="7" class="dom-domain"/>
+      <g class="dom-grid">
+        <line x1="424" y1="86" x2="424" y2="238"/><line x1="456" y1="86" x2="456" y2="238"/><line x1="488" y1="86" x2="488" y2="238"/><line x1="520" y1="86" x2="520" y2="238"/>
+        <line x1="392" y1="116.4" x2="552" y2="116.4"/><line x1="392" y1="146.8" x2="552" y2="146.8"/><line x1="392" y1="177.2" x2="552" y2="177.2"/><line x1="392" y1="207.6" x2="552" y2="207.6"/>
+      </g>
+      <rect x="456" y="207.6" width="32" height="30.4" rx="3" class="dom-selected-cell"/>
+      <g id="domSimpleMesh"></g>
+      <path d="M472 240 V248" fill="none" stroke="#2a78d6" stroke-width="1.2" stroke-dasharray="3 3"/>
+      <text x="472" y="258" text-anchor="middle" class="dom-sub">blue: directions · amber: result</text>
+      <text id="domSimpleSolveText" x="472" y="272" text-anchor="middle" class="dom-sub">8 transport solves</text>
+
+      <path d="M568 161 H594 M587 155 L594 161 L587 167" class="dom-big-arrow"/>
+
+      <!-- 4. the rendered radiation -->
+      <text x="672" y="30" text-anchor="middle" class="dom-title">4. The result</text>
+      <text x="672" y="46" text-anchor="middle" class="dom-sub">the radiation field</text>
+      <rect x="592" y="86" width="160" height="152" rx="7" class="dom-domain"/>
+      <g clip-path="url(#domFieldClip)">
+        <image id="domSimpleField" x="592" y="86" width="160" height="152" preserveAspectRatio="none" href=""/>
+        <path id="domSimpleTruth" class="dom-truth" d=""/>
+      </g>
+      <g class="dom-grid" id="domSimpleFieldGrid" clip-path="url(#domFieldClip)"></g>
+      <circle cx="632" cy="196" r="12" class="dom-source-glow"/>
+      <circle cx="632" cy="196" r="5" class="dom-source"/>
+      <circle cx="632" cy="196" r="2" fill="#fff" opacity=".8"/>
+      <text id="domSimpleFieldText" x="672" y="258" text-anchor="middle" class="dom-sub"></text>
+      <text id="domSimpleMeshText" x="672" y="272" text-anchor="middle" class="dom-sub">dashed = reality · 32×32 cells</text>
+
+      <!-- bottom message -->
+      <rect x="130" y="300" width="500" height="28" rx="14" class="dom-pill"/>
+      <text id="domSimpleBottom" x="380" y="318" text-anchor="middle" class="dom-sub"></text>
+    </svg>
+  </div>
+
+  <div class="dom-simple__controls">
+    <div class="dom-control-group">
+      <span class="dom-control-label">Try a different light pattern</span>
+      <div class="dom-buttons" id="domSimpleScenes">
+        <button type="button" data-scene="smooth" class="is-active">Smooth glow</button>
+        <button type="button" data-scene="side">Mostly from one side</button>
+        <button type="button" data-scene="beam">Sharp beam</button>
+      </div>
+    </div>
+    <div class="dom-control-group">
+      <span class="dom-control-label">How fine a mesh?</span>
+      <div class="dom-buttons" id="domSimpleMeshes">
+        <button type="button" data-mesh="0">16 × 16</button>
+        <button type="button" data-mesh="1" class="is-active--mesh">32 × 32</button>
+        <button type="button" data-mesh="2">64 × 64</button>
+      </div>
+    </div>
+    <div class="dom-control-group">
+      <label class="dom-control-label" for="domSimpleOrder">How many directions?</label>
+      <div class="dom-order">
+        <output id="domSimpleOrderOutput" for="domSimpleOrder">8</output>
+        <input id="domSimpleOrder" type="range" min="0" max="3" step="1" value="1" aria-label="Number of directions"/>
+      </div>
+    </div>
+  </div>
+</div>
+<figcaption>
+  Fig. 4 — Discrete ordinates in one picture. Instead of following light in every direction, the method picks a
+  handful of directions (2) and solves how light travels through the mesh along each one (3). The result (4) is
+  the field it predicts around a hot spot, with reality as a dashed outline. With few directions the light can
+  only travel along those few lines, so an even glow comes out as a star of streaks — the <em>ray effect</em> —
+  and a beam is bent onto the nearest allowed direction. More directions smooth this out, at the price of one
+  more transport solve per direction. The mesh matters too: on a coarse mesh light leaks sideways from cell to
+  cell as it travels — <em>false scattering</em> — which blurs the streaks but also smears a beam; a fine mesh
+  keeps things sharp and costs many more cells.
+</figcaption>
+</figure>
+
+<details class="accordion">
+  <summary>Why can 64 × 64 look worse than 32 × 32?</summary>
+  <p>
+    Two errors are at play. The <strong>ray effect</strong> comes from too few directions and does not care
+    about the mesh. <strong>False scattering</strong> comes from the mesh: on coarse cells it smears the streaks
+    into each other — which, for a diffuse glow, happens to push the picture toward the smooth truth. A fine
+    mesh removes that blur and exposes the angular error underneath. It does not add error; it stops hiding it.
+  </p>
+  <p>
+    Refining the mesh alone never converges a DOM solution: you have to add directions and cells together. Try
+    it — at 64 × 64, going from 8 to 32 directions does far more than going from 32 × 32 to 64 × 64. For a
+    beam the trade-off runs the other way, since smearing is always harmful there.
+  </p>
+</details>
+
+<script>
+(() => {
+  const demo = document.getElementById("domSimple");
+  if (!demo || demo.dataset.initialized === "true") return;
+  demo.dataset.initialized = "true";
+  const svgNS = "http://www.w3.org/2000/svg";
+  const $ = id => document.getElementById(id);
+
+  const REAL = { x: 97, y: 162 }, PICK = { x: 283, y: 162 }, RADIUS = 66;
+  const SOURCE = { x: 632, y: 196 };
+  const FIELD = { x: 592, y: 86, w: 160, h: 152, res: 2 };
+  const SAMPLES = 240;
+  const angles = Array.from({ length: SAMPLES }, (_, i) => i / SAMPLES * Math.PI * 2);
+  const COUNTS = [4, 8, 16, 32];
+
+  // example light patterns at one point (same three as the P_N figure)
+  const scenes = {
+    smooth: { name: "a smooth glow",                    fn: a => 0.82 + 0.10 * Math.cos(a - 0.5) },
+    side:   { name: "light mostly coming from one side", fn: a => 0.42 + 0.42 * Math.max(0, Math.cos(a + 0.35)) + 0.08 * Math.cos(2 * a) },
+    beam:   { name: "a sharp beam",                     fn: a => 0.10 + Math.exp(13 * (Math.cos(a + 0.45) - 1)) }
+  };
+  const MESHES = [16, 32, 64];
+  let scene = "smooth", level = 1, meshLevel = 1, active = 0, sweepTimer = null;
+  const falloff = r => 1 / (1 + Math.pow(r / 45, 1.6));   // how a point source fades with distance
+
+  const polarPath = (fn, cx, cy, scale) => angles.map((t, i) => {
+    const r = Math.max(0, fn(t)) * scale;
+    return (i ? "L" : "M") + (cx + Math.cos(t) * r).toFixed(1) + "," + (cy + Math.sin(t) * r).toFixed(1);
+  }).join(" ") + " Z";
+  const mk = (tag, attrs) => { const el = document.createElementNS(svgNS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); return el; };
+
+  function drawRays(fn, scale) {
+    $("domSimpleRays").replaceChildren(...angles.filter((_, i) => i % 12 === 0).map(t =>
+      mk("line", { x1: REAL.x, y1: REAL.y, x2: (REAL.x + Math.cos(t) * fn(t) * scale).toFixed(1), y2: (REAL.y + Math.sin(t) * fn(t) * scale).toFixed(1), class: "dom-ray-line" })));
+  }
+
+  // 2: blue arrows = the fixed set of directions the model solves along (all equal, whatever the light);
+  //    amber = the brightness read off the pattern along each one, so it always fits inside the outline
+  function drawSpokes(dirs, fn, scale) {
+    const out = [], thin = dirs.length > 16;
+    dirs.forEach((t, i) => {
+      const cs = Math.cos(t), sn = Math.sin(t), R = 64;
+      const a = mk("line", { x1: PICK.x, y1: PICK.y, x2: (PICK.x + cs * R).toFixed(1), y2: (PICK.y + sn * R).toFixed(1), class: "dom-spoke", "data-i": i });
+      if (thin) a.style.strokeWidth = "1.1";
+      out.push(a);
+    });
+    dirs.forEach((t, i) => {
+      const cs = Math.cos(t), sn = Math.sin(t), r = Math.max(0, fn(t)) * scale - 1.5;
+      const l = mk("line", { x1: PICK.x, y1: PICK.y, x2: (PICK.x + cs * r).toFixed(1), y2: (PICK.y + sn * r).toFixed(1), class: "dom-result", "data-i": i });
+      if (thin) l.style.strokeWidth = "1.8";
+      out.push(l);
+    });
+    $("domSimpleSpokes").replaceChildren(...out);
+  }
+
+  // 3: every mesh cell has the SAME directions (equal blue arrows). Amber = the brightness the solver finds
+  //    along each direction in that cell: light from the hot cell (highlighted) travelling along
+  //    direction i reaches a cell only if that cell lies on direction i's streak.
+  const mesh = { x: 392, y: 86, cols: 5, rows: 5, w: 32, h: 30.4 };
+  const MESH_SRC = { x: 472, y: 222.8 };
+  function drawMesh(dirs, unit) {
+    const out = [], E = dirs.map(t => unit(t)), Emax = Math.max(...E, 1e-6), thin = dirs.length > 16;
+    for (let row = 0; row < mesh.rows; row++) for (let col = 0; col < mesh.cols; col++) {
+      const cx = mesh.x + (col + .5) * mesh.w, cy = mesh.y + (row + .5) * mesh.h;
+      const dx = cx - MESH_SRC.x, dy = cy - MESH_SRC.y, here = col === 2 && row === 4;
+      dirs.forEach((t, i) => {
+        const cs = Math.cos(t), sn = Math.sin(t);
+        out.push(mk("line", { x1: cx, y1: cy, x2: (cx + cs * 13).toFixed(1), y2: (cy + sn * 13).toFixed(1), class: "dom-mini-dir", "data-i": i }));
+        let v;
+        if (here) v = E[i] / Emax;                                   // the hot cell: its own emission along each direction
+        else {
+          const along = dx * cs + dy * sn, perp = Math.abs(-dx * sn + dy * cs), sw = 6 + 0.12 * Math.max(0, along);
+          v = along < -6 ? 0 : (E[i] / Emax) * falloff(Math.max(0, along)) * Math.exp(-perp * perp / (2 * sw * sw));
+        }
+        const r = v < 0.02 ? 0 : 2 + 9.5 * Math.sqrt(Math.min(1, 1.6 * v));
+        if (r === 0) return;
+        const l = mk("line", { x1: cx, y1: cy, x2: (cx + cs * r).toFixed(1), y2: (cy + sn * r).toFixed(1), class: "dom-mini-spoke", "data-i": i });
+        if (thin) l.style.strokeWidth = "1.1";
+        out.push(l);
+      });
+    }
+    $("domSimpleMesh").replaceChildren(...out);
+  }
+
+  // 4: the field around a hot spot. Each chosen direction carries its share of the light as a
+  //    streak that fades with distance and spreads a little (numerical diffusion). Total energy
+  //    does not depend on the number of directions, so more directions = dimmer, denser streaks
+  //    that eventually overlap into a smooth glow. Reality is the dashed contour.
+  const falloffInv = k => k >= 1 ? 0 : 45 * Math.pow(1 / k - 1, 1 / 1.6);
+  const THRESHOLD = 0.2;
+  const fieldCanvas = document.createElement("canvas");
+  fieldCanvas.width = FIELD.w * FIELD.res; fieldCanvas.height = FIELD.h * FIELD.res;
+  function drawField(dirs, fn, M) {
+    const cell = FIELD.w / M;                               // cell size in drawing units
+    const peak = Math.max(...angles.map(fn));
+    const E = dirs.map(t => Math.min(1.6, fn(t) / peak) * 8 / dirs.length);   // energy share per direction
+    const cs = dirs.map(Math.cos), sn = dirs.map(Math.sin);
+    const ctx = fieldCanvas.getContext("2d"), W = fieldCanvas.width, H = fieldCanvas.height, res = FIELD.res;
+    const img = ctx.createImageData(W, H), d = img.data, buf = new Float32Array(W * H);
+    const sx = (SOURCE.x - FIELD.x) * res, sy = (SOURCE.y - FIELD.y) * res;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const dx = (x - sx) / res, dy = (y - sy) / res;
+      let v = 0;
+      for (let i = 0; i < dirs.length; i++) {
+        const along = dx * cs[i] + dy * sn[i];               // distance travelled along direction i
+        if (along < -6) continue;
+        const perp = Math.abs(-dx * sn[i] + dy * cs[i]);      // distance sideways from that line
+        // false scattering: each cell a beam crosses leaks a little light sideways, so the
+        // streak widens with distance at a rate set by the cell size
+        const s = 0.45 * cell + 0.09 * (cell / 5) * Math.max(0, along);
+        v += E[i] * falloff(Math.max(0, along)) * Math.exp(-perp * perp / (2 * s * s));
+      }
+      buf[y * W + x] = v;
+    }
+    // the solver only knows one value per cell: average the field into the chosen mesh
+    const cp = cell * res, cols = M, rows = Math.ceil(H / cp);
+    for (let cy = 0; cy < rows; cy++) for (let cx = 0; cx < cols; cx++) {
+      const x0 = Math.round(cx * cp), y0 = Math.round(cy * cp), x1 = Math.min(W, Math.round((cx + 1) * cp)), y1 = Math.min(H, Math.round((cy + 1) * cp));
+      let sum = 0, n = 0;
+      for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { sum += buf[y * W + x]; n++; }
+      const c = Math.pow(Math.min(1, sum / Math.max(1, n)), 0.6), hot = Math.min(1, c * 1.25);
+      for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+        const k = (y * W + x) * 4;
+        d[k] = 217 + (235 - 217) * hot; d[k + 1] = 138 + (104 - 138) * hot; d[k + 2] = 31 + (52 - 31) * hot; d[k + 3] = Math.min(255, 255 * c * 1.1);
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    // grid of the chosen mesh over the field
+    const grid = [], op = M === 16 ? .55 : M === 32 ? .35 : .2;
+    for (let i = 1; i < M; i++) grid.push(mk("line", { x1: (FIELD.x + i * cell).toFixed(1), y1: FIELD.y, x2: (FIELD.x + i * cell).toFixed(1), y2: FIELD.y + FIELD.h }));
+    for (let j = 1; j < rows; j++) grid.push(mk("line", { x1: FIELD.x, y1: (FIELD.y + j * cell).toFixed(1), x2: FIELD.x + FIELD.w, y2: (FIELD.y + j * cell).toFixed(1) }));
+    const g = $("domSimpleFieldGrid"); g.replaceChildren(...grid); g.style.opacity = op;
+    $("domSimpleField").setAttribute("href", fieldCanvas.toDataURL("image/png"));
+    $("domSimpleTruth").setAttribute("d", polarPath(t => falloffInv(THRESHOLD * peak / Math.max(fn(t), 1e-6)), SOURCE.x, SOURCE.y, 1));
+  }
+
+  // "one direction at a time": light up one direction after another in panels 2 and 3
+  function highlight() {
+    demo.querySelectorAll(".is-on").forEach(el => el.classList.remove("is-on"));
+    demo.querySelectorAll(`[data-i="${active}"]`).forEach(el => el.classList.add("is-on"));
+  }
+  function startSweep(n) {
+    if (sweepTimer) clearInterval(sweepTimer);
+    active = 0; highlight();
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    sweepTimer = setInterval(() => { active = (active + 1) % n; highlight(); }, n > 16 ? 260 : n > 8 ? 420 : 750);
+  }
+
+  function render() {
+    const n = COUNTS[level], fn = scenes[scene].fn;
+    const dirs = Array.from({ length: n }, (_, i) => i / n * Math.PI * 2);
+    const peak = Math.max(...angles.map(fn)), scale = RADIUS / peak, unit = t => fn(t) / peak;
+    $("domSimpleReal").setAttribute("d", polarPath(fn, REAL.x, REAL.y, scale));
+    $("domSimpleGhost").setAttribute("d", polarPath(fn, PICK.x, PICK.y, scale));
+    drawRays(fn, scale);
+    drawSpokes(dirs, fn, scale);
+    drawMesh(dirs, unit);
+    const M = MESHES[meshLevel];
+    drawField(dirs, fn, M);
+    startSweep(n);
+
+    $("domSimpleOrderOutput").textContent = n;
+    $("domSimpleCountText").textContent = `${n} directions, all equal`;
+    $("domSimpleSolveText").textContent = `${n} transport solves`;
+    const few = n <= 8;
+    const coarse = M === 16, fine = M === 64;
+    $("domSimpleFieldText").textContent = scene === "smooth"
+      ? (few ? (coarse ? "blurry star, smeared" : "a star of streaks, not a glow")
+             : coarse ? "glow, blurred by the mesh" : fine ? (n === 16 ? "streaks still visible" : "faint streaks remain") : (n === 16 ? "streaks nearly merge" : "smooth, like reality"))
+      : scene === "beam"
+      ? (few ? (coarse ? "beam bent and smeared" : "beam bent onto allowed lines") : (coarse ? "right way, but smeared wide" : "beam nearly right"))
+      : (few ? (coarse ? "leans right, but smeared" : "streaky, but leaning right") : (coarse ? "leans right, but blurred" : fine ? "close, faint streaks" : "close to reality"));
+    $("domSimpleMeshText").textContent = `dashed = reality · ${M}×${M} cells`;
+    const meshNote = coarse ? " On a coarse 16×16 mesh light also leaks sideways between cells (false scattering): blurrier everywhere — the streaks fade, but so does the beam."
+                   : fine ? " On a fine 64×64 mesh there is little sideways leak: what you see is the method's own error, sharp — and four times the cells to solve."
+                   : "";
+    $("domSimpleStatus").textContent = {
+      smooth: few ? `With only ${n} directions, light can travel just ${n} ways — so an even glow comes out as a star of streaks. That is the ray effect.`
+                  : `With ${n} directions the streaks overlap and the glow is nearly even — but that is ${n} transport equations to solve in every cell.`,
+      side:   few ? `${n} directions capture "brighter on one side" roughly, but between the chosen directions the field goes dark.`
+                  : `With ${n} directions the one-sided pattern is well captured; only faint streaks remain.`,
+      beam:   few ? `A sharp beam can only follow the allowed directions: with ${n} of them it is bent, or split, onto the nearest lines.`
+                  : `With ${n} directions there is almost always one close to the beam, so the beam comes through — with faint side streaks.`
+    }[scene] + meshNote;
+    $("domSimpleBottom").textContent = few ? `${n} directions: cheap, but streaky — the ray effect`
+                                           : `${n} directions: smooth — but ${n} solves per cell, every iteration`;
+  }
+
+  $("domSimpleOrder").addEventListener("input", e => { level = +e.target.value; render(); });
+  $("domSimpleMeshes").addEventListener("click", e => {
+    const b = e.target.closest("[data-mesh]"); if (!b) return;
+    meshLevel = +b.dataset.mesh;
+    demo.querySelectorAll("#domSimpleMeshes button").forEach(x => x.classList.toggle("is-active--mesh", x === b));
+    render();
+  });
+  $("domSimpleScenes").addEventListener("click", e => {
+    const b = e.target.closest("[data-scene]"); if (!b) return;
+    scene = b.dataset.scene;
+    demo.querySelectorAll("#domSimpleScenes button").forEach(x => x.classList.toggle("is-active", x === b));
+    render();
+  });
+  render();
+})();
+</script>

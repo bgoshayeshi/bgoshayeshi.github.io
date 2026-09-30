@@ -1,0 +1,393 @@
+<!-- Monte Carlo ray tracing — simple visual explainer for a broad audience.
+     Included into index.html by the data-include loader.
+     Every colour token has a literal fallback so the figure renders even if the site stylesheet is missing. -->
+<style>
+  .rt-simple {
+    --rt-blue: #2a78d6; --rt-ray: #d98a1f; --rt-heat: #eb6834;
+    --rt-paper: var(--paper-2, #F5F4EF); --rt-card: var(--card, #FBFAF6); --rt-line: var(--line, #E2DED2);
+    --rt-line-strong: var(--line-strong, #D6D1C4); --rt-ink: var(--ink, #1A1A18); --rt-ink-soft: var(--ink-soft, #3D3C37);
+    --rt-muted: var(--muted, #6B6A62);
+    --rt-mono: var(--mono, "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace);
+    --rt-sans: var(--sans, "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif);
+    margin: 0; border: 1px solid var(--rt-line); border-radius: 8px; overflow: hidden;
+    background: radial-gradient(circle at 14% 40%, color-mix(in srgb, var(--rt-ray) 6%, transparent), transparent 28%), var(--rt-card);
+  }
+  .rt-simple__head { padding: 18px 20px 12px; }
+  .rt-simple__head h4 { margin: 0 0 5px !important; color: var(--rt-ink); font-size: 16px !important; }
+  .rt-simple__head p { margin: 0; color: var(--rt-muted); font: 12px/1.5 var(--rt-mono); max-width: 70ch; }
+  .rt-simple__stage { padding: 4px 14px 14px; }
+  .rt-simple svg { display: block; width: 100%; height: auto; }
+
+  .rt-title { fill: var(--rt-ink); font: 600 13px var(--rt-sans); }
+  .rt-sub { fill: var(--rt-muted); font: 10px var(--rt-mono); }
+  .rt-big-arrow { fill: none; stroke: var(--rt-line-strong); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .rt-circle { fill: var(--rt-paper); stroke: var(--rt-line); stroke-width: 1.1; }
+  .rt-ring { fill: none; stroke: var(--rt-line); stroke-width: .8; opacity: .55; }
+  .rt-ray-line { stroke: var(--rt-ray); stroke-width: 1; stroke-linecap: round; opacity: .22; }
+  .rt-real { fill: none; stroke: var(--rt-ray); stroke-width: 1.6; stroke-dasharray: 4 3; stroke-linejoin: round; }
+  .rt-real--ghost { stroke-width: 1.3; opacity: .8; }
+  .rt-center { fill: var(--rt-ink); }
+  .rt-shot { stroke: var(--rt-blue); stroke-width: 1.2; stroke-linecap: round; }
+  .rt-shot.is-on { stroke: var(--rt-ray); stroke-width: 2.6; opacity: 1 !important; filter: url(#rtSimpleGlow); }
+
+  .rt-domain { fill: var(--rt-paper); stroke: var(--rt-line-strong); stroke-width: 1.2; }
+  .rt-grid { stroke: var(--rt-line); stroke-width: 1; }
+  .rt-grid--faint { opacity: .55; }
+  .rt-path { stroke: var(--rt-blue); stroke-width: 1; stroke-linecap: round; opacity: .35; }
+  .rt-path.is-on { stroke: var(--rt-ray); stroke-width: 2.2; opacity: 1; filter: url(#rtSimpleGlow); }
+  .rt-selected-cell { fill: color-mix(in srgb, var(--rt-blue) 7%, transparent); stroke: var(--rt-blue); stroke-width: 1.8; }
+
+  .rt-truth { fill: none; stroke: var(--rt-ray); stroke-width: 1.4; stroke-dasharray: 4 3; opacity: .9; }
+  .rt-source { fill: var(--rt-heat); }
+  .rt-source-glow { fill: var(--rt-heat); opacity: .18; }
+  .rt-pill { fill: var(--rt-paper); stroke: var(--rt-line); }
+
+  .rt-simple__controls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px 22px; padding: 14px 18px 18px; border-top: 1px solid var(--rt-line); }
+  .rt-simple button.is-active--mesh { color: #fff; background: var(--rt-blue); border-color: var(--rt-blue); }
+  .rt-cell-hit { fill: var(--rt-ray); }
+  .rt-control-label { display: block; margin-bottom: 7px; color: var(--rt-muted); font: 600 10px var(--rt-mono); letter-spacing: .09em; text-transform: uppercase; }
+  .rt-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rt-simple button { appearance: none; border: 1px solid var(--rt-line-strong); border-radius: 7px; background: var(--rt-paper); color: var(--rt-ink-soft); padding: 7px 10px; font: 500 11px var(--rt-mono); cursor: pointer; }
+  .rt-simple button.is-active { color: #fff; background: var(--rt-ray); border-color: var(--rt-ray); }
+  .rt-order { display: flex; align-items: center; gap: 10px; }
+  .rt-order output { min-width: 44px; color: var(--rt-blue); font: 700 20px var(--rt-mono); }
+  .rt-order input { width: min(180px, 44vw); accent-color: var(--rt-blue); }
+  @media (max-width: 640px) { .rt-simple__controls { flex-direction: column; } }
+</style>
+
+<figure>
+<div class="rt-simple" id="rtSimple">
+  <div class="rt-simple__head">
+    <h4>Ray tracing: fire rays at random and add up where they land</h4>
+    <p id="rtSimpleStatus"></p>
+  </div>
+
+  <div class="rt-simple__stage">
+    <svg viewBox="0 0 760 350" role="img" aria-labelledby="rtSimpleTitle rtSimpleDesc">
+      <title id="rtSimpleTitle">How Monte Carlo ray tracing works</title>
+      <desc id="rtSimpleDesc">Four panels. One: the selected light pattern, how the hot cell emits. Two: the model fires rays in random directions, more of them where the light is brighter. Three: each ray is followed in a straight line through the mesh, one ray at a time, and cells are tinted by how many rays cross them. Four: the radiation field is the sum of where the rays' energy lands: grainy with few rays, smooth and exact with many. A mesh selector shows that a finer mesh shares the same rays among more cells and so looks noisier. The true field is a dashed outline.</desc>
+      <defs>
+        <filter id="rtSimpleGlow" filterUnits="userSpaceOnUse" x="0" y="0" width="760" height="350">
+          <feGaussianBlur stdDeviation="2.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <clipPath id="rtMeshClip"><rect x="392" y="86" width="160" height="152" rx="7"/></clipPath>
+        <clipPath id="rtFieldClip"><rect x="592" y="86" width="160" height="152" rx="7"/></clipPath>
+      </defs>
+
+      <!-- 1. light in one cell -->
+      <text x="97" y="30" text-anchor="middle" class="rt-title">1. Selected light pattern</text>
+      <text x="97" y="46" text-anchor="middle" class="rt-sub">how the hot cell emits</text>
+      <circle cx="97" cy="162" r="74" class="rt-circle"/>
+      <circle cx="97" cy="162" r="49" class="rt-ring"/>
+      <g id="rtSimpleRays"></g>
+      <path id="rtSimpleReal" class="rt-real" d=""/>
+      <circle cx="97" cy="162" r="4" class="rt-center"/>
+      <text x="97" y="258" text-anchor="middle" class="rt-sub">brightness by direction</text>
+      <text x="97" y="272" text-anchor="middle" class="rt-sub">dashed = reality, as in (4)</text>
+
+      <path d="M182 161 H208 M201 155 L208 161 L201 167" class="rt-big-arrow"/>
+
+      <!-- 2. fire random rays -->
+      <text x="283" y="30" text-anchor="middle" class="rt-title">2. Model's random rays</text>
+      <text x="283" y="46" text-anchor="middle" class="rt-sub">random, more where brighter</text>
+      <circle cx="283" cy="162" r="74" class="rt-circle"/>
+      <circle cx="283" cy="162" r="49" class="rt-ring"/>
+      <path id="rtSimpleGhost" class="rt-real rt-real--ghost" d=""/>
+      <g id="rtSimpleShots"></g>
+      <circle cx="283" cy="162" r="4" class="rt-center"/>
+      <text id="rtSimpleCountText" x="283" y="258" text-anchor="middle" class="rt-sub">64 random rays</text>
+
+      <path d="M368 161 H394 M387 155 L394 161 L387 167" class="rt-big-arrow"/>
+
+      <!-- 3. follow each ray -->
+      <text x="472" y="30" text-anchor="middle" class="rt-title">3. Solving in every cell</text>
+      <text x="472" y="46" text-anchor="middle" class="rt-sub">cells count the rays that cross</text>
+      <rect x="392" y="86" width="160" height="152" rx="7" class="rt-domain"/>
+      <g id="rtSimpleCells" clip-path="url(#rtMeshClip)"></g>
+      <g class="rt-grid">
+        <line x1="424" y1="86" x2="424" y2="238"/><line x1="456" y1="86" x2="456" y2="238"/><line x1="488" y1="86" x2="488" y2="238"/><line x1="520" y1="86" x2="520" y2="238"/>
+        <line x1="392" y1="116.4" x2="552" y2="116.4"/><line x1="392" y1="146.8" x2="552" y2="146.8"/><line x1="392" y1="177.2" x2="552" y2="177.2"/><line x1="392" y1="207.6" x2="552" y2="207.6"/>
+      </g>
+      <g clip-path="url(#rtMeshClip)"><g id="rtSimplePaths"></g></g>
+      <rect x="456" y="207.6" width="32" height="30.4" rx="3" class="rt-selected-cell"/>
+      <circle cx="472" cy="222.8" r="3.5" class="rt-source"/>
+      <path d="M472 240 V248" fill="none" stroke="#2a78d6" stroke-width="1.2" stroke-dasharray="3 3"/>
+      <text x="472" y="258" text-anchor="middle" class="rt-sub">amber = rays tallied there</text>
+      <text id="rtSimplePathText" x="472" y="272" text-anchor="middle" class="rt-sub"></text>
+
+      <path d="M568 161 H594 M587 155 L594 161 L587 167" class="rt-big-arrow"/>
+
+      <!-- 4. the result -->
+      <text x="672" y="30" text-anchor="middle" class="rt-title">4. The result</text>
+      <text x="672" y="46" text-anchor="middle" class="rt-sub">add up where they land</text>
+      <rect x="592" y="86" width="160" height="152" rx="7" class="rt-domain"/>
+      <g clip-path="url(#rtFieldClip)">
+        <image id="rtSimpleField" x="592" y="86" width="160" height="152" preserveAspectRatio="none" href=""/>
+        <path id="rtSimpleTruth" class="rt-truth" d=""/>
+      </g>
+      <g class="rt-grid" id="rtSimpleFieldGrid" clip-path="url(#rtFieldClip)"></g>
+      <circle cx="632" cy="196" r="12" class="rt-source-glow"/>
+      <circle cx="632" cy="196" r="5" class="rt-source"/>
+      <circle cx="632" cy="196" r="2" fill="#fff" opacity=".8"/>
+      <text id="rtSimpleFieldText" x="672" y="258" text-anchor="middle" class="rt-sub"></text>
+      <text id="rtSimpleMeshText" x="672" y="272" text-anchor="middle" class="rt-sub">dashed = reality · 32×32 cells</text>
+
+      <!-- bottom message -->
+      <rect x="130" y="300" width="500" height="28" rx="14" class="rt-pill"/>
+      <text id="rtSimpleBottom" x="380" y="318" text-anchor="middle" class="rt-sub"></text>
+    </svg>
+  </div>
+
+  <div class="rt-simple__controls">
+    <div class="rt-control-group">
+      <span class="rt-control-label">Try a different light pattern</span>
+      <div class="rt-buttons" id="rtSimpleScenes">
+        <button type="button" data-scene="smooth" class="is-active">Smooth glow</button>
+        <button type="button" data-scene="side">Mostly from one side</button>
+        <button type="button" data-scene="beam">Sharp beam</button>
+      </div>
+    </div>
+    <div class="rt-control-group">
+      <span class="rt-control-label">How fine a mesh?</span>
+      <div class="rt-buttons" id="rtSimpleMeshes">
+        <button type="button" data-mesh="0">16 × 16</button>
+        <button type="button" data-mesh="1" class="is-active--mesh">32 × 32</button>
+        <button type="button" data-mesh="2">64 × 64</button>
+      </div>
+    </div>
+    <div class="rt-control-group">
+      <label class="rt-control-label" for="rtSimpleOrder">How many rays?</label>
+      <div class="rt-order">
+        <output id="rtSimpleOrderOutput" for="rtSimpleOrder">64</output>
+        <input id="rtSimpleOrder" type="range" min="0" max="3" step="1" value="1" aria-label="Number of rays"/>
+      </div>
+    </div>
+  </div>
+</div>
+<figcaption>
+  Fig. 6 — Monte Carlo ray tracing, step by step. Rays are fired from the hot spot in random directions — more of them
+  where the light is brighter (2) — and each one is followed in a straight line through the mesh (3). The
+  field (4) is simply where their energy lands, with reality as a dashed outline. Nothing is approximated
+  about the directions, so a sharp beam stays a sharp beam; the only error is graininess, and it fades as
+  you add rays: four times the rays, half the noise. The mesh is only where the energy is counted, so it never
+  bends a ray — but it does set the noise: what matters is rays <em>per cell</em>, and a finer mesh shares the
+  same rays among more cells. Every ray is independent of every other, which is why this scales so well on
+  GPUs. A bounce off a wall is the same recipe again, starting from where the ray hit.
+</figcaption>
+</figure>
+
+<details class="accordion">
+  <summary>Why does a finer mesh look noisier?</summary>
+  <p>
+    In ray tracing the mesh does nothing to the rays. They cross cells in straight lines at any angle, and the
+    cells only add up the energy that passes through them. So the mesh never constrains directions — a beam is
+    always a beam — but it does decide how the counting noise looks. The error in a cell falls as
+    1/√(rays through that cell). Go from 32 × 32 to 64 × 64 with the same rays and each cell collects a quarter
+    as many: the noise doubles, and with few rays most cells stay empty.
+  </p>
+  <p>
+    That is the cost rule of the method: to keep the noise fixed you need a fixed number of rays per cell, so
+    four times the cells means four times the rays. Compare with discrete ordinates, where a finer mesh exposes
+    the ray effect, and with P<sub>N</sub>, where the mesh changes nothing about the smoothing. Here the mesh is
+    honest but hungry.
+  </p>
+</details>
+
+<script>
+(() => {
+  const demo = document.getElementById("rtSimple");
+  if (!demo || demo.dataset.initialized === "true") return;
+  demo.dataset.initialized = "true";
+  const svgNS = "http://www.w3.org/2000/svg";
+  const $ = id => document.getElementById(id);
+
+  const REAL = { x: 97, y: 162 }, SHOT = { x: 283, y: 162 }, RADIUS = 66;
+  const MESH_SRC = { x: 472, y: 222.8 }, SOURCE = { x: 632, y: 196 };
+  const FIELD = { x: 592, y: 86, w: 160, h: 152, res: 2 };
+  const SAMPLES = 240;
+  const angles = Array.from({ length: SAMPLES }, (_, i) => i / SAMPLES * Math.PI * 2);
+  const COUNTS = [16, 64, 256, 1024];
+
+  // example light patterns at one point (same three as the other two figures)
+  const scenes = {
+    smooth: { name: "a smooth glow",                    fn: a => 0.82 + 0.10 * Math.cos(a - 0.5) },
+    side:   { name: "light mostly coming from one side", fn: a => 0.42 + 0.42 * Math.max(0, Math.cos(a + 0.35)) + 0.08 * Math.cos(2 * a) },
+    beam:   { name: "a sharp beam",                     fn: a => 0.10 + Math.exp(13 * (Math.cos(a + 0.45) - 1)) }
+  };
+  const MESHES = [16, 32, 64];
+  let scene = "smooth", level = 1, meshLevel = 1, active = 0, sweepTimer = null;
+
+  const polarPath = (fn, cx, cy, scale) => angles.map((t, i) => {
+    const r = Math.max(0, fn(t)) * scale;
+    return (i ? "L" : "M") + (cx + Math.cos(t) * r).toFixed(1) + "," + (cy + Math.sin(t) * r).toFixed(1);
+  }).join(" ") + " Z";
+  const mk = (tag, attrs) => { const el = document.createElementNS(svgNS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); return el; };
+
+  // seeded random numbers, so the picture is repeatable and the first 16 of 1024 rays are the same 16 rays
+  const mulberry32 = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  // Monte Carlo: pick directions at random, with probability proportional to the brightness there
+  function sampleDirections(fn, n) {
+    const bins = 720, cdf = new Float64Array(bins); let acc = 0;
+    for (let i = 0; i < bins; i++) { acc += Math.max(0, fn((i + .5) / bins * 2 * Math.PI)); cdf[i] = acc; }
+    const rnd = mulberry32(20260927), out = [];
+    for (let k = 0; k < n; k++) {
+      const u = rnd() * acc; let lo = 0, hi = bins - 1;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (cdf[mid] < u) lo = mid + 1; else hi = mid; }
+      out.push((lo + rnd()) / bins * 2 * Math.PI);
+    }
+    return out;
+  }
+
+  function drawRays(fn, scale) {
+    $("rtSimpleRays").replaceChildren(...angles.filter((_, i) => i % 12 === 0).map(t =>
+      mk("line", { x1: REAL.x, y1: REAL.y, x2: (REAL.x + Math.cos(t) * fn(t) * scale).toFixed(1), y2: (REAL.y + Math.sin(t) * fn(t) * scale).toFixed(1), class: "rt-ray-line" })));
+  }
+  // 2: the random rays; each carries the same energy, their density draws the pattern
+  function drawShots(dirs) {
+    const op = dirs.length <= 16 ? .75 : dirs.length <= 64 ? .5 : dirs.length <= 256 ? .28 : .14;
+    $("rtSimpleShots").replaceChildren(...dirs.map((t, i) => {
+      const l = mk("line", { x1: SHOT.x, y1: SHOT.y, x2: (SHOT.x + Math.cos(t) * 62).toFixed(1), y2: (SHOT.y + Math.sin(t) * 62).toFixed(1), class: "rt-shot", "data-i": i });
+      l.style.opacity = op; return l;
+    }));
+  }
+  // 3: the same rays, followed in straight lines from the source cell across the mesh
+  const mesh = { x: 392, y: 86, cols: 5, rows: 5, w: 32, h: 30.4 };
+  function drawPaths(dirs) {
+    const shown = dirs.slice(0, 48);
+    $("rtSimplePaths").replaceChildren(...shown.map((t, i) =>
+      mk("line", { x1: MESH_SRC.x, y1: MESH_SRC.y, x2: (MESH_SRC.x + Math.cos(t) * 260).toFixed(1), y2: (MESH_SRC.y + Math.sin(t) * 260).toFixed(1), class: "rt-path", "data-i": i })));
+    // each cell counts the rays that cross it — that count is the tally panel 4 is made of
+    const hits = new Array(mesh.cols * mesh.rows).fill(0);
+    shown.forEach(t => {
+      const seen = new Set();
+      for (let sN = 0; sN < 260; sN += 2) {
+        const x = MESH_SRC.x + Math.cos(t) * sN, y = MESH_SRC.y + Math.sin(t) * sN;
+        const c = Math.floor((x - mesh.x) / mesh.w), r = Math.floor((y - mesh.y) / mesh.h);
+        if (c < 0 || r < 0 || c >= mesh.cols || r >= mesh.rows) { if (sN > 0) break; else continue; }
+        seen.add(r * mesh.cols + c);
+      }
+      seen.forEach(k => hits[k]++);
+    });
+    const max = Math.max(1, ...hits.filter((_, k) => k !== 4 * mesh.cols + 2));
+    $("rtSimpleCells").replaceChildren(...hits.map((n, k) => {
+      const c = k % mesh.cols, r = Math.floor(k / mesh.cols), rect = mk("rect", { x: mesh.x + c * mesh.w, y: (mesh.y + r * mesh.h).toFixed(1), width: mesh.w, height: mesh.h.toFixed(1), class: "rt-cell-hit" });
+      rect.style.opacity = (0.55 * Math.min(1, n / max)).toFixed(2); return rect;
+    }));
+    return shown.length;
+  }
+
+  // 4: each ray deposits energy along its line; the 1/r fading of a point source appears by itself,
+  //    because far away the rays are spread thinner. Same total energy whatever the number of rays.
+  const falloff = r => 1 / (1 + Math.pow(r / 45, 1.6));
+  const falloffInv = k => k >= 1 ? 0 : 45 * Math.pow(1 / k - 1, 1 / 1.6);
+  const THRESHOLD = 0.2;
+  const fieldCanvas = document.createElement("canvas");
+  fieldCanvas.width = FIELD.w * FIELD.res; fieldCanvas.height = FIELD.h * FIELD.res;
+  const KR = 3, kernel = []; { let s = 0; for (let j = -KR; j <= KR; j++) for (let i = -KR; i <= KR; i++) { const w = Math.exp(-(i * i + j * j) / (2 * 1.7 * 1.7)); kernel.push([i, j, w]); s += w; } kernel.forEach(k => k[2] /= s); }
+  function drawField(dirs, fn, M) {
+    const cell = FIELD.w / M;
+    const W = fieldCanvas.width, H = fieldCanvas.height, res = FIELD.res, buf = new Float32Array(W * H);
+    const sx = (SOURCE.x - FIELD.x) * res, sy = (SOURCE.y - FIELD.y) * res;
+    // energy per pixel of path. Total energy scales with the pattern's average brightness, as in the
+    // other two figures (a beam carries less total light than a glow), calibrated so a smooth glow
+    // matches the same falloff they use.
+    const peakV = Math.max(...angles.map(fn)), meanUnit = angles.reduce((a, t) => a + fn(t), 0) / SAMPLES / peakV;
+    const D = 215 / dirs.length * meanUnit / 0.89;
+    dirs.forEach(t => {
+      const cs = Math.cos(t), sn = Math.sin(t);
+      for (let s = 0; s < 420; s++) {
+        const x = Math.round(sx + cs * s), y = Math.round(sy + sn * s);
+        if (x < -KR || y < -KR || x >= W + KR || y >= H + KR) break;
+        for (const [i, j, w] of kernel) { const px = x + i, py = y + j; if (px >= 0 && py >= 0 && px < W && py < H) buf[py * W + px] += D * w; }
+      }
+    });
+    // the cells add up what fell into them: one value per cell of the chosen mesh
+    const ctx = fieldCanvas.getContext("2d"), img = ctx.createImageData(W, H), d = img.data;
+    const cp = cell * res, rows = Math.ceil(H / cp);
+    for (let cy = 0; cy < rows; cy++) for (let cx = 0; cx < M; cx++) {
+      const x0 = Math.round(cx * cp), y0 = Math.round(cy * cp), x1 = Math.min(W, Math.round((cx + 1) * cp)), y1 = Math.min(H, Math.round((cy + 1) * cp));
+      let sum = 0, n = 0;
+      for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { sum += buf[y * W + x]; n++; }
+      const c = Math.pow(Math.min(1, sum / Math.max(1, n)), 0.6), hot = Math.min(1, c * 1.25);
+      for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+        const o = (y * W + x) * 4;
+        d[o] = 217 + (235 - 217) * hot; d[o + 1] = 138 + (104 - 138) * hot; d[o + 2] = 31 + (52 - 31) * hot; d[o + 3] = Math.min(255, 255 * c * 1.1);
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    const grid = [], op = M === 16 ? .55 : M === 32 ? .35 : .2;
+    for (let i = 1; i < M; i++) grid.push(mk("line", { x1: (FIELD.x + i * cell).toFixed(1), y1: FIELD.y, x2: (FIELD.x + i * cell).toFixed(1), y2: FIELD.y + FIELD.h }));
+    for (let j = 1; j < rows; j++) grid.push(mk("line", { x1: FIELD.x, y1: (FIELD.y + j * cell).toFixed(1), x2: FIELD.x + FIELD.w, y2: (FIELD.y + j * cell).toFixed(1) }));
+    const g = $("rtSimpleFieldGrid"); g.replaceChildren(...grid); g.style.opacity = op;
+    $("rtSimpleField").setAttribute("href", fieldCanvas.toDataURL("image/png"));
+    $("rtSimpleTruth").setAttribute("d", polarPath(t => falloffInv(THRESHOLD * peakV / Math.max(fn(t), 1e-6)), SOURCE.x, SOURCE.y, 1));
+  }
+
+  // "one ray at a time": light up one ray after another in panels 2 and 3
+  function highlight() {
+    demo.querySelectorAll(".is-on").forEach(el => el.classList.remove("is-on"));
+    demo.querySelectorAll(`[data-i="${active}"]`).forEach(el => el.classList.add("is-on"));
+  }
+  function startSweep(n) {
+    if (sweepTimer) clearInterval(sweepTimer);
+    active = 0; highlight();
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    sweepTimer = setInterval(() => { active = (active + 1) % n; highlight(); }, n > 16 ? 220 : 600);
+  }
+
+  function render() {
+    const n = COUNTS[level], fn = scenes[scene].fn;
+    const dirs = sampleDirections(fn, n);
+    const peak = Math.max(...angles.map(fn)), scale = RADIUS / peak;
+    $("rtSimpleReal").setAttribute("d", polarPath(fn, REAL.x, REAL.y, scale));
+    $("rtSimpleGhost").setAttribute("d", polarPath(fn, SHOT.x, SHOT.y, scale));
+    drawRays(fn, scale);
+    drawShots(dirs);
+    const shown = drawPaths(dirs);
+    const M = MESHES[meshLevel];
+    drawField(dirs, fn, M);
+    startSweep(shown);
+
+    const few = n <= 64;
+    $("rtSimpleOrderOutput").textContent = n;
+    $("rtSimpleCountText").textContent = `${n} random rays`;
+    $("rtSimplePathText").textContent = n > shown ? `first ${shown} of ${n} shown` : `${n} rays, one after another`;
+    const coarse = M === 16, fine = M === 64;
+    $("rtSimpleFieldText").textContent = n === 16 ? (fine ? "mostly empty cells" : coarse ? "blocky, but less grainy" : "grainy — right on average")
+      : n === 64 ? (fine ? "grainy — too few rays per cell" : coarse ? "blocky, taking shape" : "still grainy, taking shape")
+      : n === 256 ? (fine ? "grainy but close" : coarse ? "smooth but blocky" : "nearly there")
+      : (fine ? "close — a little grain left" : coarse ? "smooth, exact, blocky" : "smooth and exact");
+    $("rtSimpleMeshText").textContent = `dashed = reality · ${M}×${M} cells`;
+    const meshNote = fine ? " On a 64×64 mesh the same rays are shared among four times as many cells, so each cell sees a quarter of them: noise is set by rays per cell."
+                   : coarse ? " On a 16×16 mesh each cell collects many rays, so the picture is less grainy — but blocky."
+                   : "";
+    $("rtSimpleStatus").textContent = {
+      smooth: few ? `With ${n} rays the glow is grainy: each ray leaves a streak, and where none happened to go it stays dark. The average is right, the picture is noisy.`
+                  : `With ${n} rays the streaks blend into an even glow that matches reality. Four times the rays, half the noise.`,
+      side:   few ? `${n} rays already lean the right way — more of them were fired where the light is brighter — but the field is speckled.`
+                  : `With ${n} rays the one-sided pattern comes out exactly; only faint speckle remains.`,
+      beam:   few ? `Even ${n} rays point the right way: ray tracing never bends or smears a beam. The only flaw is graininess.`
+                  : `With ${n} rays the beam is exact — sharp edges, no streaks, no blob. This is where ray tracing beats the other two.`
+    }[scene] + meshNote;
+    $("rtSimpleBottom").textContent = few ? `${n} rays: fast, but grainy — noise drops as 1/√N`
+                                          : `${n} rays: smooth and exact — every ray is independent, so it parallelises well`;
+  }
+
+  $("rtSimpleOrder").addEventListener("input", e => { level = +e.target.value; render(); });
+  $("rtSimpleMeshes").addEventListener("click", e => {
+    const b = e.target.closest("[data-mesh]"); if (!b) return;
+    meshLevel = +b.dataset.mesh;
+    demo.querySelectorAll("#rtSimpleMeshes button").forEach(x => x.classList.toggle("is-active--mesh", x === b));
+    render();
+  });
+  $("rtSimpleScenes").addEventListener("click", e => {
+    const b = e.target.closest("[data-scene]"); if (!b) return;
+    scene = b.dataset.scene;
+    demo.querySelectorAll("#rtSimpleScenes button").forEach(x => x.classList.toggle("is-active", x === b));
+    render();
+  });
+  render();
+})();
+</script>

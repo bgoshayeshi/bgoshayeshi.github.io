@@ -1,0 +1,157 @@
+<!-- Closing figure — the Utah teapot and the Stanford dragon in a small room, rendered with a physically based
+     path tracer, and the same scene as each radiation model would get it. Pick a model; drag the divider to
+     compare with ray tracing. Images: assets/closing/glaze-<model>.webp.
+     Included into index.html by the data-include loader.
+     Every colour token has a literal fallback so the figure renders even if the site stylesheet is missing. -->
+<style>
+  .scn {
+    --s-ray: #d98a1f; --s-heat: #eb6834; --s-blue: #2a78d6;
+    --s-paper: var(--paper-2, #F5F4EF); --s-card: var(--card, #FBFAF6); --s-line: var(--line, #E2DED2);
+    --s-line-strong: var(--line-strong, #D6D1C4); --s-ink: var(--ink, #1A1A18); --s-ink-soft: var(--ink-soft, #3D3C37);
+    --s-muted: var(--muted, #6B6A62);
+    --s-mono: var(--mono, "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace);
+    margin: 0; border: 1px solid var(--s-line); border-radius: 8px; overflow: hidden; background: var(--s-card);
+  }
+  .scn__head { padding: 18px 20px 12px; }
+  .scn__head h4 { margin: 0 0 5px !important; color: var(--s-ink); font-size: 16px !important; }
+  .scn__head p { margin: 0; min-height: 4.5em; color: var(--s-muted); font: 12px/1.5 var(--s-mono); max-width: 78ch; }
+
+  .scn__view { position: relative; aspect-ratio: 16 / 10; background: #1b1916; overflow: hidden; touch-action: pan-y;
+    user-select: none; -webkit-user-select: none; }
+  .scn__view img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+  .scn__model { clip-path: inset(0 calc(100% - var(--split, 50%)) 0 0); }
+  .scn__view.is-ref .scn__model, .scn__view.is-ref .scn__handle, .scn__view.is-ref .scn__tag--left { display: none; }
+  .scn__handle { position: absolute; top: 0; bottom: 0; left: var(--split, 50%); width: 2px; margin-left: -1px;
+    background: rgba(255,255,255,.9); box-shadow: 0 0 0 1px rgba(0,0,0,.25); cursor: ew-resize; }
+  .scn__handle::after { content: "⟷"; position: absolute; top: 50%; left: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px;
+    border-radius: 50%; background: #fff; color: #1a1a18; font: 600 16px/34px var(--s-mono); text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,.35); }
+  .scn__range { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
+  .scn__view.is-ref .scn__range { display: none; }
+  .scn__tag { position: absolute; top: 10px; padding: 4px 8px; border-radius: 6px; background: rgba(20,19,17,.72); color: #fff;
+    font: 600 10.5px var(--s-mono); letter-spacing: .04em; pointer-events: none; }
+  .scn__tag--left { left: 10px; }
+  .scn__tag--right { right: 10px; }
+  .scn__loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,.7);
+    font: 11px var(--s-mono); pointer-events: none; opacity: 0; transition: opacity .2s; }
+  .scn__view.is-loading .scn__loading { opacity: 1; }
+
+  .scn__meter { display: flex; align-items: center; gap: 12px; padding: 12px 20px 0; font: 11px var(--s-mono); color: var(--s-muted); }
+  .scn__meter b { color: var(--s-ink); font-weight: 600; min-width: 4.5ch; }
+  .scn__bar { flex: 1; max-width: 260px; height: 6px; border-radius: 3px; background: var(--s-line); overflow: hidden; }
+  .scn__bar i { display: block; height: 100%; width: 0; background: var(--s-heat); transition: width .3s; }
+
+  .scn__controls { display: flex; flex-wrap: wrap; gap: 14px 26px; margin-top: 12px; padding: 14px 18px 18px; border-top: 1px solid var(--s-line); }
+  .scn__label { display: block; margin-bottom: 7px; color: var(--s-muted); font: 600 10px var(--s-mono); letter-spacing: .09em; text-transform: uppercase; }
+  .scn__buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+  .scn__buttons button { appearance: none; border: 1px solid var(--s-line-strong); border-radius: 7px; background: var(--s-paper);
+    color: var(--s-ink-soft); padding: 7px 10px; font: 500 11px var(--s-mono); cursor: pointer; }
+  .scn__buttons button.is-active { color: #fff; background: var(--s-ray); border-color: var(--s-ray); }
+</style>
+
+<figure>
+<div class="scn" id="scn">
+  <div class="scn__head">
+    <h4>The teapot and the dragon, four ways</h4>
+    <p id="scnStatus" aria-live="polite"></p>
+  </div>
+
+  <div class="scn__view" id="scnView">
+    <img class="scn__ref" id="scnRef" alt="" width="1440" height="900"/>
+    <img class="scn__model" id="scnModel" alt="" width="1440" height="900"/>
+    <span class="scn__tag scn__tag--left" id="scnTagLeft"></span>
+    <span class="scn__tag scn__tag--right" id="scnTagRight">Ray tracing</span>
+    <div class="scn__handle" aria-hidden="true"></div>
+    <input class="scn__range" id="scnSplit" type="range" min="0" max="100" value="50" step="0.5"
+           aria-label="Divider: left shows the chosen model, right shows ray tracing"/>
+    <span class="scn__loading">loading…</span>
+  </div>
+
+  <div class="scn__meter" id="scnMeter">
+    <span>off from ray tracing</span><b id="scnErr">–</b><span class="scn__bar"><i id="scnErrBar"></i></span>
+  </div>
+
+  <div class="scn__controls">
+    <div>
+      <span class="scn__label">Radiation model</span>
+      <div class="scn__buttons" id="scnModels">
+        <button type="button" data-model="rt">Ray tracing</button>
+        <button type="button" data-model="direct">No exchange</button>
+        <button type="button" data-model="p1" class="is-active">Spherical Harmonics (P₁)</button>
+        <button type="button" data-model="dom">Discrete Ordinates (DOM)</button>
+      </div>
+    </div>
+  </div>
+</div>
+<figcaption>
+  Fig. 7 — The Utah teapot and the Stanford dragon in a small room with a red and a green wall, lit by one small
+  lamp. Pick a radiation model and drag the divider to compare it with ray tracing. All images were rendered for this post with a physically
+  based path tracer (<a href="https://www.mitsuba-renderer.org/" target="_blank" rel="noopener noreferrer">Mitsuba 3</a>,
+  16,384 rays per pixel). Ray tracing is the reference; the other three show each model's typical error on this
+  scene rather than the output of an engineering solver: <em>no exchange</em> keeps only light that comes straight
+  from the source; <em>spherical harmonics (P₁)</em> delivers the source's light as a smooth glow and cannot hold a sharp shadow;
+  <em>discrete ordinates (DOM)</em> lets the light leave the source only along the 24 directions of an
+  S₄ set. The “off” meter is the average difference in brightness from the ray-traced image.
+</figcaption>
+</figure>
+
+<script>
+(() => {
+  const demo = document.getElementById("scn");
+  if (!demo || demo.dataset.initialized === "true") return;
+  demo.dataset.initialized = "true";
+  const $ = id => document.getElementById(id);
+  const view = $("scnView"), refImg = $("scnRef"), modelImg = $("scnModel");
+  const BASE = "assets/closing/";
+  const MODELS = { rt: "Ray tracing", direct: "No exchange", p1: "Spherical Harmonics (P₁)", dom: "Discrete Ordinates (DOM, 24 directions)" };
+  const mat = "glaze";
+  let model = "p1", stats = {};
+
+  // what you should see — per model
+  const TEXT = {
+    rt: "Ray tracing — every bounce followed. Soft shadows, red and green light spilling from the walls onto the floor and the objects, and the inside of the spout and the dragon's curls lit by light that has already bounced.",
+    direct: "No exchange — each surface sees the lamp and nothing else. Shadows go pitch black and the walls stop tinting the room: everything that is missing here is light that bounced at least once.",
+    p1: "Spherical Harmonics (P₁) — the overall glow of the room is right (P₁ is good at light that many bounces have mixed), but its smooth description cannot hold a sharp shadow: they melt away.",
+    dom: "Discrete Ordinates (DOM) with 24 directions — the lamp's light can only leave along 24 lines, so the room is lit in patches with dark gaps in between: the ray effect, on a real scene."
+  };
+
+  const src = (m, k) => `${BASE}${k}-${m}.webp`;
+  const cache = new Map();
+  function load(url) {
+    if (!cache.has(url)) cache.set(url, new Promise(res => { const i = new Image(); i.onload = i.onerror = () => res(url); i.src = url; }));
+    return cache.get(url);
+  }
+
+  async function render() {
+    const isRef = model === "rt";
+    view.classList.toggle("is-ref", isRef);
+    view.classList.add("is-loading");
+    await Promise.all([load(src("rt", mat)), isRef ? null : load(src(model, mat))]);
+    refImg.src = src("rt", mat);
+    refImg.alt = `The teapot and the dragon, rendered with ray tracing.`;
+    if (!isRef) { modelImg.src = src(model, mat); modelImg.alt = `The same scene as the ${MODELS[model]} model would get it.`; }
+    view.classList.remove("is-loading");
+    $("scnTagLeft").textContent = MODELS[model];
+    $("scnTagRight").textContent = isRef ? "Ray tracing — the reference" : "Ray tracing";
+    $("scnStatus").textContent = TEXT[model];
+    const e = stats[`${mat}-${model}`];
+    $("scnErr").textContent = isRef ? "0%" : e == null ? "–" : Math.round(e * 100) + "%";
+    $("scnErrBar").style.width = isRef || e == null ? "0%" : Math.min(100, e * 200) + "%";
+    // warm the cache: the other models
+    Object.keys(MODELS).forEach(m => load(src(m, mat)));
+  }
+
+  function setSplit(v) { view.style.setProperty("--split", v + "%"); }
+  $("scnSplit").addEventListener("input", e => setSplit(e.target.value));
+  setSplit(50);
+
+  $("scnModels").addEventListener("click", e => {
+    const b = e.target.closest("[data-model]"); if (!b) return;
+    model = b.dataset.model;
+    demo.querySelectorAll("#scnModels button").forEach(x => x.classList.toggle("is-active", x === b));
+    render();
+  });
+
+  fetch(BASE + "stats.json").then(r => r.ok ? r.json() : {}).then(s => { stats = s; render(); }).catch(() => render());
+})();
+</script>

@@ -1,0 +1,463 @@
+<!-- Radiation principles — one ray in, three ways out (absorbed α, reflected ρ, transmitted τ).
+     Interactive: pick a material (mirror, black body, glass, …) or set α, ρ, τ yourself, and watch
+     light photons meet it one by one. Included into index.html by the data-include loader.
+     Every colour token has a literal fallback so the figure renders even if the site stylesheet is missing. -->
+<style>
+  .fates {
+    --f-ray: #d98a1f; --f-heat: #eb6834; --f-ir: #d4432a; --f-blue: #2a78d6;
+    --f-paper: var(--paper-2, #F5F4EF); --f-card: var(--card, #FBFAF6); --f-line: var(--line, #E2DED2);
+    --f-line-strong: var(--line-strong, #D6D1C4); --f-ink: var(--ink, #1A1A18); --f-ink-soft: var(--ink-soft, #3D3C37);
+    --f-muted: var(--muted, #6B6A62);
+    --f-mono: var(--mono, "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace);
+    --f-sans: var(--sans, "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif);
+    margin: 0; border: 1px solid var(--f-line); border-radius: 8px; overflow: hidden;
+    background: radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--f-ray) 7%, transparent), transparent 32%), var(--f-card);
+  }
+  .fates__head { padding: 18px 20px 10px; }
+  .fates__head h4 { margin: 0 0 5px !important; color: var(--f-ink); font-size: 16px !important; }
+  .fates__head p { margin: 0; min-height: 3em; color: var(--f-muted); font: 12px/1.5 var(--f-mono); max-width: 74ch; }
+  .fates__stage { position: relative; padding: 0 14px; }
+  .fates canvas { display: block; width: 100%; border-radius: 7px; background: var(--f-paper); }
+  .fates__tools { float: right; display: flex; gap: 6px; margin: 0 0 6px 12px; }
+  .fates__tools button { appearance: none; border: 1px solid var(--f-line-strong); border-radius: 7px;
+    background: var(--f-card); color: var(--f-ink-soft); padding: 5px 9px; font: 500 11px var(--f-mono); cursor: pointer; }
+
+  /* live tally: what fraction of the photons actually went each way */
+  .fates__tally { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 12px 18px 4px; }
+  .fates__stat { border: 1px solid var(--f-line); border-radius: 7px; background: var(--f-paper); padding: 8px 10px; }
+  .fates__stat b { display: block; color: var(--f-muted); font: 600 11px var(--f-mono); letter-spacing: .02em; }
+  .fates__stat output { display: block; margin-top: 2px; font: 700 18px var(--f-mono); }
+  .fates__stat small { display: block; color: var(--f-muted); font: 10.5px var(--f-mono); }
+  .fates__stat--a output { color: var(--f-heat); }
+  .fates__stat--r output, .fates__stat--t output { color: var(--f-ray); }
+  .fates__stat--e output { color: var(--f-ir); }
+  .fates__bar { position: relative; height: 5px; margin-top: 6px; border-radius: 3px; background: var(--f-line); }
+  .fates__bar i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: currentColor; transition: width .25s; }
+  .fates__bar u { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--f-ink); }
+  .fates__stat--a .fates__bar { color: var(--f-heat); }
+  .fates__stat--r .fates__bar, .fates__stat--t .fates__bar { color: var(--f-ray); }
+  .fates__stat--e .fates__bar { color: var(--f-ir); }
+  .fates__sum { padding: 4px 18px 0; color: var(--f-muted); font: 11px var(--f-mono); }
+  .fates__sum strong { color: var(--f-ink); font-weight: 600; }
+
+  .fates__controls { display: flex; flex-wrap: wrap; gap: 16px 26px; margin-top: 12px; padding: 14px 18px 18px; border-top: 1px solid var(--f-line); }
+  .fates__group { min-width: 0; }
+  .fates__group--wide { flex: 1 1 100%; }
+  .fates__label { display: block; margin-bottom: 7px; color: var(--f-muted); font: 600 10px var(--f-mono); letter-spacing: .09em; text-transform: uppercase; }
+  .fates__buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fates__buttons button { appearance: none; border: 1px solid var(--f-line-strong); border-radius: 7px; background: var(--f-paper);
+    color: var(--f-ink-soft); padding: 7px 10px; font: 500 11px var(--f-mono); cursor: pointer; }
+  .fates__buttons button.is-active { color: #fff; background: var(--f-ray); border-color: var(--f-ray); }
+  .fates__slider { display: grid; grid-template-columns: 92px 1fr 62px; align-items: center; gap: 8px; margin: 4px 0; font: 11px var(--f-mono); color: var(--f-ink-soft); }
+  .fates__slider input { width: 100%; min-width: 0; accent-color: var(--f-ray); }
+  .fates__slider output { text-align: right; font-weight: 600; color: var(--f-ink); }
+  .fates__slider--a input { accent-color: var(--f-heat); }
+  .fates__slider--s input, .fates__slider--angle input { accent-color: var(--f-blue); }
+  .fates__sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+  @media (max-width: 640px) {
+    .fates__tally { grid-template-columns: 1fr 1fr; }
+    .fates__sliders { grid-template-columns: 1fr; }
+  }
+</style>
+
+<figure>
+<div class="fates" id="fates">
+  <div class="fates__head">
+    <div class="fates__tools">
+      <button type="button" id="fatesReset" title="Clear the counts and cool the slab">Reset</button>
+      <button type="button" id="fatesPlay" aria-label="Pause animation">Pause</button>
+    </div>
+    <h4>One ray in, three ways out</h4>
+    <p id="fatesStatus" aria-live="polite"></p>
+  </div>
+
+  <div class="fates__stage">
+    <canvas id="fatesCanvas" role="img" aria-label="Animated diagram: light from a lamp hits a slab of the chosen material. Each photon is reflected, absorbed (turning into heat) or transmitted through, in proportions set by the material. A slab that absorbs warms up and glows, sending out its own infrared light in all directions."></canvas>
+  </div>
+
+  <div class="fates__tally" aria-live="off">
+    <div class="fates__stat fates__stat--r"><b>Reflected · ρ</b><output id="fatesOutR">0%</output><small id="fatesNR">0 photons</small><div class="fates__bar"><i id="fatesBarR"></i><u id="fatesTickR"></u></div></div>
+    <div class="fates__stat fates__stat--a"><b>Absorbed · α</b><output id="fatesOutA">0%</output><small id="fatesNA">0 photons</small><div class="fates__bar"><i id="fatesBarA"></i><u id="fatesTickA"></u></div></div>
+    <div class="fates__stat fates__stat--t"><b>Transmitted · τ</b><output id="fatesOutT">0%</output><small id="fatesNT">0 photons</small><div class="fates__bar"><i id="fatesBarT"></i><u id="fatesTickT"></u></div></div>
+    <div class="fates__stat fates__stat--e"><b>Glows · ε = α</b><output id="fatesOutE">0 °</output><small id="fatesNE">0 infrared photons</small><div class="fates__bar"><i id="fatesBarE"></i></div></div>
+  </div>
+  <p class="fates__sum" id="fatesSum"></p>
+
+  <div class="fates__controls">
+    <div class="fates__group fates__group--wide">
+      <span class="fates__label">Pick a material</span>
+      <div class="fates__buttons" id="fatesMaterials">
+        <button type="button" data-mat="mirror" class="is-active">Mirror</button>
+        <button type="button" data-mat="black">Black body</button>
+        <button type="button" data-mat="glass">Window glass</button>
+        <button type="button" data-mat="frosted">Frosted glass</button>
+        <button type="button" data-mat="snow">Snow / white paint</button>
+        <button type="button" data-mat="teapot">Blue teapot glaze</button>
+        <button type="button" data-mat="custom">Your own…</button>
+      </div>
+    </div>
+    <div class="fates__group fates__group--wide">
+      <span class="fates__label">…or set the fractions yourself (they always add up to 100%)</span>
+      <div class="fates__sliders">
+        <div>
+          <label class="fates__slider fates__slider--r">Reflect ρ<input type="range" id="fatesR" min="0" max="100" step="1"/><output id="fatesRV"></output></label>
+          <label class="fates__slider fates__slider--a">Absorb α<input type="range" id="fatesA" min="0" max="100" step="1"/><output id="fatesAV"></output></label>
+          <label class="fates__slider fates__slider--t">Transmit τ<input type="range" id="fatesT" min="0" max="100" step="1"/><output id="fatesTV"></output></label>
+        </div>
+        <div>
+          <label class="fates__slider fates__slider--s">Finish<input type="range" id="fatesS" min="0" max="100" step="1" aria-label="Surface finish, from rough (diffuse) to polished (specular)"/><output id="fatesSV"></output></label>
+          <label class="fates__slider fates__slider--angle">Light angle<input type="range" id="fatesAngle" min="0" max="70" step="1" value="40"/><output id="fatesAngleV">40°</output></label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<figcaption>
+  Fig. 1 — Every photon that meets matter has three possible fates: it is <em>reflected</em> (ρ), <em>absorbed</em>
+  and turned into heat (α), or <em>transmitted</em> through (τ). Which one is down to chance, but the odds are set
+  by the material, so the counts settle on the fractions — and because every photon goes somewhere,
+  α + ρ + τ = 1. The extremes are the ideal <strong>mirror</strong> (ρ = 1: every ray bounces, angle in = angle out,
+  and it never warms up), the <strong>black body</strong> (α = 1: every ray is swallowed) and a perfectly clear
+  <strong>window</strong> (τ = 1). The finish decides <em>how</em> light leaves: polished surfaces bounce it in one
+  direction (specular), rough ones scatter it everywhere (diffuse) — the same fractions, a very different look.
+  Watch the slab, too: whatever it absorbs heats it up, and a warm surface glows in the infrared (red) in every
+  direction. A good absorber is an equally good emitter (ε = α, Kirchhoff's law), which is why the black body
+  glows brightest and the mirror not at all.
+</figcaption>
+</figure>
+
+<script>
+(() => {
+  const demo = document.getElementById("fates");
+  if (!demo || demo.dataset.initialized === "true") return;
+  demo.dataset.initialized = "true";
+  const $ = id => document.getElementById(id);
+  const canvas = $("fatesCanvas"), ctx = canvas.getContext("2d");
+
+  // r, a, t: reflected / absorbed / transmitted fractions; s: share of reflection & transmission that stays
+  // specular (polished, one direction) rather than diffuse (rough, scattered everywhere)
+  const MATERIALS = {
+    mirror:  { name: "Mirror",            r: 1,    a: 0,    t: 0,    s: 1,
+               note: "An ideal mirror: every photon bounces off at the angle it came in. Nothing is absorbed, so it never warms up — and never glows." },
+    black:   { name: "Black body",        r: 0,    a: 1,    t: 0,    s: 1,
+               note: "An ideal black body: every photon is swallowed and becomes heat. It warms up — and, being the perfect absorber, it is also the perfect emitter: it glows in the infrared, in every direction." },
+    glass:   { name: "Window glass",      r: 0.08, a: 0.02, t: 0.90, s: 1,
+               note: "Clear glass: most photons pass straight through (bent a little inside), a few bounce off — the faint reflection you see in a window at night." },
+    frosted: { name: "Frosted glass",     r: 0.12, a: 0.06, t: 0.82, s: 0,
+               note: "Frosted glass lets almost as much light through as clear glass — but its rough surface scatters every photon, so you cannot see through it." },
+    snow:    { name: "Snow / white paint", r: 0.88, a: 0.12, t: 0,   s: 0,
+               note: "Snow reflects almost as much light as a mirror — yet looks nothing like one, because it scatters every photon in a random direction (diffuse)." },
+    teapot:  { name: "Blue teapot glaze", r: 0.40, a: 0.60, t: 0,    s: 0.3,
+               note: "The glazed teapot does a bit of everything: a sharp highlight (specular), its blue colour (diffuse), and the rest becomes heat." }
+  };
+  const N_GLASS = 1.5, SPEED = 300, RATE = 14;       // refractive index, photon speed (px/s), photons per second
+
+  let mat = { ...MATERIALS.mirror }, matKey = "mirror";
+  let angle = 40 * Math.PI / 180;
+  let photons = [], sparks = [], tally = { r: 0, a: 0, t: 0, e: 0 };
+  let temp = 0, spawnAcc = 0, emitAcc = 0;
+  let W = 760, H = 380, G = {};
+  let running = !window.matchMedia("(prefers-reduced-motion: reduce)").matches, visible = true, last = 0, raf = 0;
+
+  const css = name => getComputedStyle(demo).getPropertyValue(name).trim();
+
+  // ---------- geometry (in CSS pixels, so text stays readable on a phone) ----------
+  function layout() {
+    const w = Math.max(300, canvas.clientWidth || 760);
+    W = w; H = Math.round(Math.min(420, Math.max(300, w * 0.5)));
+    const dpr = window.devicePixelRatio || 1;
+    canvas.style.height = H + "px";
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const top = Math.round(H * 0.5), thick = Math.max(34, Math.round(H * 0.11));
+    G = { x0: W * 0.1, x1: W * 0.9, top, bot: top + thick, hx: W * 0.42 };
+    photons = []; sparks = [];
+  }
+  function lampPos() {
+    const s = Math.sin(angle), c = Math.cos(angle);
+    const L = Math.min((G.top - 34) / c, s > 0.01 ? (G.hx - 28) / s : 1e9);
+    return { x: G.hx - s * L, y: G.top - c * L };
+  }
+
+  // ---------- physics of one photon ----------
+  const rand = Math.random;
+  function diffuse(up) {                                  // cosine-weighted direction off a flat surface
+    const phi = Math.asin(2 * rand() - 1);
+    return { dx: Math.sin(phi), dy: up ? -Math.cos(phi) : Math.cos(phi) };
+  }
+  function spawnLight() {
+    const L = lampPos(), s = Math.sin(angle), c = Math.cos(angle), off = (rand() - 0.5) * 16;
+    photons.push({ x: L.x + c * off, y: L.y - s * off, dx: s, dy: c, phase: "in", ir: false, hist: [], fade: 1 });
+  }
+  function spawnIR() {
+    const up = rand() < 0.5, d = diffuse(up);
+    const x = G.x0 + 8 + rand() * (G.x1 - G.x0 - 16);
+    photons.push({ x, y: up ? G.top - 1 : G.bot + 1, dx: d.dx, dy: d.dy, phase: "free", ir: true, hist: [], fade: 1 });
+    tally.e++;
+  }
+  function hitTop(p) {
+    p.y = G.top;
+    const u = rand();
+    if (u < mat.r) {                                       // reflected
+      tally.r++;
+      if (rand() < mat.s) p.dy = -p.dy; else Object.assign(p, diffuse(true));
+      p.phase = "free";
+    } else if (u < mat.r + mat.a) {                        // absorbed: sinks in and becomes heat
+      tally.a++;
+      p.phase = "absorb"; p.depth = 0;
+    } else {                                               // transmitted: refract in, travel, leave
+      tally.t++;
+      p.inDir = { dx: p.dx, dy: p.dy };
+      const st = p.dx / N_GLASS;
+      p.dx = st; p.dy = Math.sqrt(1 - st * st);
+      p.phase = "inside"; p.specOut = rand() < mat.s;
+    }
+  }
+  function step(dt) {
+    // new light photons from the lamp; infrared from a warm slab (rate ∝ ε·T⁴, ε = α)
+    spawnAcc += dt * RATE;
+    while (spawnAcc >= 1) { spawnLight(); spawnAcc--; }
+    emitAcc += dt * mat.a * 30 * Math.pow(temp, 4);
+    while (emitAcc >= 1) { spawnIR(); emitAcc--; }
+    // the slab loses heat to its surroundings, so it settles where heating balances cooling
+    temp = Math.max(0, temp - dt * temp * 0.32);
+
+    for (const p of photons) {
+      p.hist.push(p.x, p.y); if (p.hist.length > 20) p.hist.splice(0, 2);
+      const v = (p.phase === "inside" ? SPEED / N_GLASS : p.phase === "absorb" ? SPEED * 0.25 : SPEED) * dt;
+      p.x += p.dx * v; p.y += p.dy * v;
+      if (p.phase === "in" && p.y >= G.top) hitTop(p);
+      else if (p.phase === "inside" && p.y >= G.bot) {
+        p.y = G.bot;
+        Object.assign(p, p.specOut ? p.inDir : diffuse(false));
+        p.phase = "free";
+      } else if (p.phase === "absorb") {
+        p.depth += v; p.fade = Math.max(0, 1 - p.depth / 14);
+        if (p.depth >= 14) { p.dead = true; temp = Math.min(1.25, temp + 0.024); sparks.push({ x: p.x, y: p.y, t: 0 }); }
+      }
+      if (p.ir) p.fade = Math.max(0, p.fade - dt * 0.35);
+      if (p.x < -40 || p.x > W + 40 || p.y < -40 || p.y > H + 40 || p.fade <= 0) p.dead = true;
+    }
+    photons = photons.filter(p => !p.dead);
+    for (const s of sparks) s.t += dt;
+    sparks = sparks.filter(s => s.t < 0.9);
+  }
+
+  // ---------- drawing ----------
+  function slabFill() {
+    const g = ctx.createLinearGradient(0, G.top, 0, G.bot);
+    switch (matKey) {
+      case "mirror":  g.addColorStop(0, "#f4f6f8"); g.addColorStop(0.35, "#c3c9d0"); g.addColorStop(1, "#8e969f"); return g;
+      case "black":   return "#1b1a18";
+      case "glass":   return "rgba(158,197,244,.30)";
+      case "frosted": return "rgba(205,222,238,.78)";
+      case "snow":    return "#fdfdfb";
+      case "teapot":  g.addColorStop(0, "#4d7fc0"); g.addColorStop(1, "#23497f"); return g;
+      default: {                                          // your own: lighter the more it reflects, clearer the more it transmits
+        const k = mat.r + mat.a > 0 ? mat.r / (mat.r + mat.a) : 1, l = Math.round(24 + 222 * k);
+        return `rgba(${l},${l},${Math.min(255, l + 6)},${(1 - 0.72 * mat.t).toFixed(2)})`;
+      }
+    }
+  }
+  function arrowHead(x, y, dx, dy, color, size = 6) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx));
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-size, -size * 0.55); ctx.lineTo(-size, size * 0.55); ctx.closePath();
+    ctx.fillStyle = color; ctx.fill(); ctx.restore();
+  }
+  function label(text, x, y, color, align = "left", weight = 500) {
+    ctx.font = `${weight} 11px ${css("--f-mono") || "monospace"}`;
+    ctx.textAlign = align; ctx.fillStyle = color; ctx.fillText(text, x, y);
+  }
+
+  function draw() {
+    const RAY = css("--f-ray") || "#d98a1f", HEAT = css("--f-heat") || "#eb6834", IR = css("--f-ir") || "#d4432a";
+    const INK = css("--f-ink-soft") || "#3D3C37", MUTED = css("--f-muted") || "#6B6A62", LINE = css("--f-line-strong") || "#D6D1C4";
+    ctx.clearRect(0, 0, W, H);
+
+    // warm glow around a hot slab
+    const T = Math.min(1, temp);
+    if (T > 0.02 && mat.a > 0) {
+      const glow = ctx.createRadialGradient(G.hx, (G.top + G.bot) / 2, 10, G.hx, (G.top + G.bot) / 2, W * 0.55);
+      glow.addColorStop(0, `rgba(235,90,40,${(0.22 * T * mat.a).toFixed(3)})`); glow.addColorStop(1, "rgba(235,90,40,0)");
+      ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+    }
+
+    // the slab
+    ctx.fillStyle = slabFill();
+    ctx.fillRect(G.x0, G.top, G.x1 - G.x0, G.bot - G.top);
+    if (T > 0.02 && mat.a > 0) {                            // it heats up: dull red → orange
+      const k = T * Math.min(1, mat.a * 1.4);
+      const hot = ctx.createRadialGradient(G.hx, (G.top + G.bot) / 2, 4, G.hx, (G.top + G.bot) / 2, (G.x1 - G.x0) * 0.55);
+      hot.addColorStop(0, `rgba(${Math.round(200 + 50 * T)},${Math.round(60 + 70 * T)},30,${(0.85 * k).toFixed(3)})`);
+      hot.addColorStop(1, `rgba(170,40,20,${(0.45 * k).toFixed(3)})`);
+      ctx.fillStyle = hot; ctx.fillRect(G.x0, G.top, G.x1 - G.x0, G.bot - G.top);
+    }
+    ctx.strokeStyle = matKey === "mirror" ? "#ffffff" : LINE; ctx.lineWidth = matKey === "mirror" ? 2 : 1.2;
+    ctx.strokeRect(G.x0 + 0.5, G.top + 0.5, G.x1 - G.x0 - 1, G.bot - G.top - 1);
+    if (W < 560) label(mat.name.toLowerCase(), G.x1, G.bot + 15, INK, "right");
+    else label(mat.name.toLowerCase(), G.x1 - 10, G.bot - 10, matKey === "black" || matKey === "teapot" || (matKey === "custom" && mat.r < 0.45 && mat.t < 0.5) ? "#f5f4ef" : INK, "right");
+
+    // surface normal and the angle of incidence / reflection
+    const s = Math.sin(angle), c = Math.cos(angle), nLen = Math.min(90, G.top - 40);
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(G.hx, G.top); ctx.lineTo(G.hx, G.top - nLen); ctx.stroke(); ctx.setLineDash([]);
+    if (W >= 560) label("normal", G.hx, G.top - nLen - 6, MUTED, "center", 400);
+    if (angle > 0.05) {
+      ctx.strokeStyle = MUTED; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(G.hx, G.top, 30, -Math.PI / 2 - angle, -Math.PI / 2); ctx.stroke();
+      label("θ", G.hx - 30 * Math.sin(angle / 2) - 4, G.top - 30 * Math.cos(angle / 2) - 5, MUTED, "center", 400);
+      if (mat.r > 0 && mat.s > 0) {
+        ctx.beginPath(); ctx.arc(G.hx, G.top, 30, -Math.PI / 2, -Math.PI / 2 + angle); ctx.stroke();
+        label("θ", G.hx + 30 * Math.sin(angle / 2) + 4, G.top - 30 * Math.cos(angle / 2) - 5, MUTED, "center", 400);
+      }
+    }
+
+    // the lamp
+    const L = lampPos();
+    const lg = ctx.createRadialGradient(L.x, L.y, 2, L.x, L.y, 26);
+    lg.addColorStop(0, "rgba(255,214,120,.95)"); lg.addColorStop(1, "rgba(255,190,80,0)");
+    ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(L.x, L.y, 26, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = RAY; ctx.beginPath(); ctx.arc(L.x, L.y, 6, 0, Math.PI * 2); ctx.fill();
+    if (W >= 560) label("light", L.x + 12, L.y + 4, INK, "left", 600);
+    else label("light", L.x, L.y + 22, INK, "center", 600);
+
+    // photons: a short fading trail with a bright head
+    ctx.lineCap = "round";
+    for (const p of photons) {
+      const col = p.ir ? IR : RAY, h = p.hist, n = h.length / 2;
+      const alphaInside = p.phase === "inside" && matKey !== "glass" ? 0.8 : 1;
+      if (p.ir) ctx.setLineDash([4, 3]);
+      for (let i = 1; i < n; i++) {
+        ctx.globalAlpha = (i / n) * 0.75 * p.fade * alphaInside;
+        ctx.strokeStyle = col; ctx.lineWidth = p.ir ? 1.6 : 2.2;
+        ctx.beginPath(); ctx.moveTo(h[2 * i - 2], h[2 * i - 1]); ctx.lineTo(i === n - 1 ? p.x : h[2 * i], i === n - 1 ? p.y : h[2 * i + 1]); ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      ctx.globalAlpha = p.fade * alphaInside;
+      ctx.fillStyle = p.phase === "absorb" ? HEAT : col;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.ir ? 1.8 : 2.6, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // heat sparks where photons were absorbed
+    for (const sp of sparks) {
+      const k = sp.t / 0.9;
+      ctx.globalAlpha = 1 - k; ctx.strokeStyle = HEAT; ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      for (let j = 0; j <= 8; j++) {
+        const xx = sp.x - 6 + j * 1.5, yy = sp.y - 4 - k * 10 + Math.sin(j * 1.2 + sp.t * 8) * 1.6;
+        j ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy);
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // where each fate goes, labelled only when it can happen
+    if (mat.r > 0) {
+      const x = W - 12;
+      label(`reflected · ρ = ${pct(mat.r)}`, x, 26, RAY, "right", 600);
+      label(mat.s >= 0.99 ? "specular: angle in = angle out" : mat.s <= 0.01 ? "diffuse: scattered everywhere" : "part specular, part diffuse", x, 41, MUTED, "right", 400);
+    }
+    if (mat.a > 0) label(`absorbed · α = ${pct(mat.a)} → heat`, G.x0 + 10, G.top + 16, matKey === "black" || matKey === "teapot" ? "#ffb08a" : HEAT, "left", 600);
+    if (mat.t > 0) {
+      label(`transmitted · τ = ${pct(mat.t)}`, W - 12, H - 28, RAY, "right", 600);
+      label(mat.s >= 0.99 ? "bent inside, same direction out" : "scattered on the way through", W - 12, H - 13, MUTED, "right", 400);
+    }
+    if (mat.a > 0 && temp > 0.15) label("infrared glow · emitted in every direction", 12, H - 13, IR, "left", 600);
+  }
+
+  // ---------- readouts ----------
+  const pct = v => Math.round(v * 100) + "%";
+  function readouts() {
+    const n = tally.r + tally.a + tally.t;
+    for (const [k, id] of [["r", "R"], ["a", "A"], ["t", "T"]]) {
+      const f = n ? tally[k] / n : 0;
+      $("fatesOut" + id).textContent = n ? pct(f) : "–";
+      $("fatesN" + id).textContent = `${tally[k]} of ${n} photons`;
+      $("fatesBar" + id).style.width = (f * 100).toFixed(1) + "%";
+      $("fatesTick" + id).style.left = (mat[k] * 100) + "%";
+    }
+    const T = Math.min(1, temp);
+    $("fatesOutE").textContent = T < 0.05 ? "cold" : T < 0.4 ? "warm" : T < 0.75 ? "hot" : "glowing";
+    $("fatesNE").textContent = `${tally.e} infrared photons`;
+    $("fatesBarE").style.width = (T * 100).toFixed(1) + "%";
+    $("fatesSum").innerHTML = `set: α + ρ + τ = ${mat.a.toFixed(2)} + ${mat.r.toFixed(2)} + ${mat.t.toFixed(2)} = <strong>1</strong>` +
+      ` · the black tick on each bar is the setting; the bar is what the photons actually did`;
+  }
+  function syncControls() {
+    $("fatesR").value = Math.round(mat.r * 100); $("fatesRV").textContent = pct(mat.r);
+    $("fatesA").value = Math.round(mat.a * 100); $("fatesAV").textContent = pct(mat.a);
+    $("fatesT").value = Math.round(mat.t * 100); $("fatesTV").textContent = pct(mat.t);
+    $("fatesS").value = Math.round(mat.s * 100);
+    $("fatesSV").textContent = mat.s >= 0.99 ? "polished" : mat.s <= 0.01 ? "rough" : pct(mat.s);
+    demo.querySelectorAll("#fatesMaterials button").forEach(b => b.classList.toggle("is-active", b.dataset.mat === matKey));
+    $("fatesStatus").textContent = matKey === "custom" ? customNote() : MATERIALS[matKey].note;
+  }
+  function customNote() {
+    const big = [["reflects", mat.r], ["absorbs", mat.a], ["transmits", mat.t]].sort((x, y) => y[1] - x[1])[0];
+    return `Your material ${big[0]} most of the light (${pct(big[1])}). Each photon still picks just one fate — ` +
+           `only the odds change. Absorbed light heats the slab, and it glows in proportion (ε = α = ${pct(mat.a)}).`;
+  }
+  function resetCounts() { tally = { r: 0, a: 0, t: 0, e: 0 }; readouts(); }
+
+  // ---------- controls ----------
+  $("fatesMaterials").addEventListener("click", e => {
+    const b = e.target.closest("[data-mat]"); if (!b) return;
+    matKey = b.dataset.mat;
+    if (matKey !== "custom") mat = { ...MATERIALS[matKey] };
+    else mat = { name: "Your material", r: mat.r, a: mat.a, t: mat.t, s: mat.s };
+    photons = photons.filter(p => p.phase !== "in" || p.y < G.top - 60);
+    resetCounts(); syncControls(); if (!running) draw();
+  });
+  // moving one fraction rescales the other two so the three always sum to 1
+  function setFraction(key, v) {
+    const others = ["r", "a", "t"].filter(k => k !== key), rest = others.reduce((s, k) => s + mat[k], 0);
+    mat[key] = v;
+    others.forEach(k => { mat[k] = rest > 1e-6 ? mat[k] / rest * (1 - v) : (1 - v) / 2; });
+    matKey = "custom"; mat.name = "Your material";
+    resetCounts(); syncControls(); if (!running) draw();
+  }
+  $("fatesR").addEventListener("input", e => setFraction("r", e.target.value / 100));
+  $("fatesA").addEventListener("input", e => setFraction("a", e.target.value / 100));
+  $("fatesT").addEventListener("input", e => setFraction("t", e.target.value / 100));
+  $("fatesS").addEventListener("input", e => {
+    mat.s = e.target.value / 100; matKey = "custom"; mat.name = "Your material";
+    resetCounts(); syncControls(); if (!running) draw();
+  });
+  $("fatesAngle").addEventListener("input", e => {
+    angle = e.target.value * Math.PI / 180; $("fatesAngleV").textContent = e.target.value + "°";
+    photons = photons.filter(p => p.phase !== "in"); if (!running) draw();
+  });
+  $("fatesReset").addEventListener("click", () => { resetCounts(); temp = 0; photons = []; sparks = []; if (!running) draw(); });
+  function setRunning(on) {
+    running = on;
+    $("fatesPlay").textContent = on ? "Pause" : "Play";
+    $("fatesPlay").setAttribute("aria-label", on ? "Pause animation" : "Play animation");
+    loop();
+  }
+  $("fatesPlay").addEventListener("click", () => setRunning(!running));
+
+  // ---------- animation loop: runs only while playing and on screen ----------
+  let tick = 0;
+  function frame(t) {
+    raf = 0;
+    if (!running || !visible) { last = 0; return; }
+    const dt = last ? Math.min(0.05, (t - last) / 1000) : 0; last = t;
+    step(dt); draw();
+    if (++tick % 8 === 0) readouts();
+    raf = requestAnimationFrame(frame);
+  }
+  function loop() { if (!raf && running && visible) raf = requestAnimationFrame(frame); }
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(es => { visible = es[0].isIntersecting; loop(); }).observe(canvas);
+  }
+  new ResizeObserver(() => { layout(); draw(); }).observe(canvas.parentElement);
+
+  layout();
+  if (!running) {                                          // reduced motion: show a settled still, play on request
+    for (let i = 0; i < 90; i++) step(1 / 30);
+    $("fatesPlay").textContent = "Play"; $("fatesPlay").setAttribute("aria-label", "Play animation");
+  }
+  syncControls(); readouts(); draw(); loop();
+})();
+</script>
