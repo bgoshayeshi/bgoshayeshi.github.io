@@ -57,8 +57,23 @@
     .post__meta a { color: var(--clay-deep); }
 
     .post__content { max-width: 760px; margin: 0 auto; font-size: 17.5px; color: var(--ink-soft); }
-    .post__content h2 { font-size: 27px; margin: 44px 0 14px; color: var(--ink); }
-    .post__content h3 { font-size: 21px; margin: 34px 0 12px; color: var(--ink); }
+    .post__content h2 { font-size: 30px; margin: 0 0 22px; color: var(--ink); }
+    .post__content h3 { font-size: 21px; margin: 48px 0 14px; color: var(--ink); }
+
+    /* major-section separator: thin rule with a small accent diamond, plus air on both sides */
+    .post__content > h2 { position: relative; margin-top: 104px; padding-top: 64px; }
+    .post__content > h2::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(to right, transparent, var(--line-strong) 18%, var(--line-strong) 82%, transparent);
+    }
+    .post__content > h2::after {
+      content: ""; position: absolute; top: -4px; left: 50%; width: 8px; height: 8px;
+      background: var(--clay); transform: translateX(-50%) rotate(45deg);
+      box-shadow: 0 0 0 6px var(--paper);
+    }
+    @media (max-width: 640px) {
+      .post__content > h2 { margin-top: 72px; padding-top: 48px; }
+    }
     .post__content h4 { font-size: 17px; margin: 26px 0 10px; color: var(--ink); }
     .post__content p { margin: 0 0 20px; }
     .post__content strong { color: var(--ink); font-weight: 600; }
@@ -96,7 +111,8 @@
       --heat:           #eb6834;
     }
 
-    figure { margin: 28px 0; }
+    figure { margin: 40px 0; }
+    .post__content > [data-include] { margin: 40px 0; }
     figcaption { font-family: var(--mono); font-size: 12.5px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
     .card {
       background: var(--card);
@@ -431,7 +447,7 @@
 </div>
 
 
-<h2>Ray Tracing Method</h2>
+<h3>3. Ray Tracing Method</h3>
 <p>
   Ray tracing does what the name says: fire lots of rays of light, follow each one in a straight line, and
   at every surface decide its fate with Fig. 1 — absorbed, reflected or transmitted. Add up where the energy
@@ -449,7 +465,7 @@
   can be traced at the same time, one per GPU thread.</li>
 </ul>
 
-<h3>NVIDIA Tools for Ray Tracing</h3>
+<h4>NVIDIA Tools for Ray Tracing</h4>
 <p>
   You do not have to build a GPU ray tracer from scratch. The hard, low-level part — organising the
   geometry so each ray quickly finds what it hits, then walking through it and testing for intersections —
@@ -523,7 +539,7 @@
   complex behaviour.
 </p>
 
-<h2>What's Left: Radiation on the GPU</h2>
+<h2>What I will write next: Radiation Modeling on the GPU/CUDA</h2>
 
 <p>
   Choosing a model is only half the story. The other half, which I think is the more important one, is
