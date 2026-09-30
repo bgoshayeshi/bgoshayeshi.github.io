@@ -533,17 +533,14 @@
 </p>
 
 <p>
-  But each model meets the GPU differently. Ray tracing is naturally parallel, millions of independent rays,
-  yet those rays wander through the geometry in different directions, and keeping thousands of GPU threads
-  busy together is the real challenge. DOM has many directions that can be solved side by side, but within
-  each direction every cell waits for its upstream neighbour. P<sub>1</sub> becomes a large sparse linear
-  system, where the limit is how fast data moves through memory rather than how fast the GPU can compute.
-  The same physics, three very different optimisation problems.
+  Each model maps to the GPU differently: ray tracing parallelizes across rays, DOM across directions and
+  sweeps, and P<sub>1</sub> becomes a sparse linear solve. The physics may be similar, but the GPU
+  optimization is not.
 </p>
 
 <p>
-  How these models are implemented and optimised on GPUs with CUDA — data layout, memory access, parallel
-  sweeps and acceleration structures — deserves its own article, and I am going to cover it in the next one.
+  CUDA implementation — memory layout, parallelism, sweeps, and acceleration structures — deserves its own
+  article, and that is where I am going next.
 </p>
 
         </div>
