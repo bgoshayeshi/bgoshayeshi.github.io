@@ -34,6 +34,12 @@
     }
   }
 
+  // Show the contact-form confirmation after the form service redirects back
+  if (/[?&]sent=1/.test(window.location.search)) {
+    var sent = document.getElementById("contactSent");
+    if (sent) sent.hidden = false;
+  }
+
   // Guard against dead TODO links jumping to top
   document.querySelectorAll('a[data-todo]').forEach(function (a) {
     a.addEventListener("click", function (e) {

@@ -13,7 +13,7 @@
   <!-- Open Graph / LinkedIn -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Babak Goshayeshi, Ph.D. | Scientific Computing & AI Platform Leader" />
-  <meta property="og:description" content="A physics-trained scientific computing leader who turns complex simulations, AI, and data pipelines into enterprise-grade solutions, and delivers." />
+  <meta property="og:description" content="A physics-trained scientific computing leader who turns complex simulations, AI, and data pipelines into enterprise solutions — and delivers." />
   <meta property="og:url" content="https://bgoshayeshi.com/" />
   <meta property="og:image" content="https://bgoshayeshi.com/assets/og-image.png" />
   <meta property="og:image:width" content="1200" />
@@ -29,6 +29,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
 
   <script type="application/ld+json">
   {
@@ -112,7 +113,7 @@
         <figure class="hero__viz reveal">
           <iframe class="hero__viz-frame"
                   src="assets/compute-viz/index.html"
-                  title="One HPC cluster feeding genomics, Bioinformatics, machine learning and AI, and CFD and CAE"
+                  title="One HPC cluster feeding genomics, bioinformatics, machine learning and AI, and CFD and CAE"
                   loading="lazy" scrolling="no"></iframe>
         </figure>
 
@@ -184,7 +185,7 @@
       <div class="wrap">
         <div class="ventures__intro reveal">
           <img class="ventures__logo" src="assets/logos/diphyx_logo.svg"
-               alt="DiPhyx" width="55" height="110" />
+               alt="" width="55" height="110" />
           <div class="section__head">
             <p class="eyebrow">Platforms</p>
             <h2>DiPhyx &amp; dxflow.</h2>
@@ -233,7 +234,7 @@
             <ul class="venture__feats">
               <li><strong>Container &amp; HPC orchestration</strong>: Docker and Slurm from one engine.</li>
               <li><strong>CLI, REST API &amp; Web UI</strong> for automation and integration.</li>
-              <li><strong>Enterprise-grade</strong>: built-in authentication and authorization.</li>
+              <li><strong>Built-in authentication and authorization</strong> for teams and enterprises.</li>
             </ul>
             <div class="venture__links">
               <a class="btn btn--clay" href="https://dxflow.ai/" target="_blank" rel="noopener">Visit dxflow <span class="arrow">→</span></a>
@@ -276,7 +277,7 @@
             </p>
             <div class="pcard__foot">
               <!-- <span class="pcard__focus">Focus: computational modeling · numerical methods · HPC · scientific software</span> -->
-              <a class="pcard__go pcard__go--cta" href="projects/odt/">Learn More <span class="arrow">→</span></a>
+              <a class="pcard__go pcard__go--cta" href="projects/odt/">Explore the ODT model <span class="arrow">→</span></a>
             </div>
           </article>
 
@@ -329,7 +330,7 @@
           <div class="tl">
             <div class="tl__dot"></div>
             <div class="tl__role"><h3>Principal Engineer</h3><span class="tl__org">DiPhyx Inc.</span></div>
-            <p class="tl__when">AI-Enhanced Scientific Computing Platform</p>
+            <p class="tl__when">AI-enhanced scientific computing platform</p>
             <ul>
               <li>Built dxflow, the DiPhyx Platform, and DiPhyx Studio.</li>
               <li>Led product strategy, platform architecture, and engineering execution.</li>
@@ -366,9 +367,10 @@
     <section id="contact" class="contact">
       <div class="wrap">
         <p class="eyebrow reveal" style="text-align:center">Let’s talk</p>
+        <p class="contact__sent" id="contactSent" hidden>Message sent — I’ll reply to your email.</p>
         <form class="contact__form reveal" action="https://formsubmit.co/b.goshayeshi@gmail.com" method="POST">
           <input type="hidden" name="_subject" value="New message from bgoshayeshi.com" />
-          <input type="hidden" name="_next" value="https://bgoshayeshi.com/#contact" />
+          <input type="hidden" name="_next" value="https://bgoshayeshi.com/?sent=1#contact" />
           <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" />
           <input type="text" name="name" placeholder="Name" aria-label="Name" required />
           <input type="email" name="email" placeholder="Email address" aria-label="Email address" required />
