@@ -5,19 +5,19 @@
    Embedded transparently as a hero backdrop. */
 
 :root {
-    --paper:        #F0EEE6;
-    --card:         #FBFAF6;
-    --ink:          #1A1A18;
-    --ink-soft:     #3D3C37;
-    --muted:        #6B6A62;
-    --line:         #E2DED2;
-    --line-strong:  #D6D1C4;
+    --paper:        #FAF9F5;
+    --card:         #FFFFFF;
+    --ink:          #141413;
+    --ink-soft:     #3D3D3A;
+    --muted:        #5E5D59;
+    --line:         #E8E6DC;
+    --line-strong:  #D1CFC5;
 
-    /* Earthy accents (anchored on the site's clay) */
-    --accent:   #CC785C;   /* clay        */
-    --accent-2: #B5613F;   /* clay-deep   */
+    /* Earthy accents (anthropic.com palette) */
+    --accent:   #D97757;   /* clay        */
+    --accent-2: #C6613F;   /* clay-deep   */
     --accent-3: #3F4A52;   /* slate       */
-    --accent-4: #7C7A52;   /* olive       */
+    --accent-4: #788C5D;   /* olive       */
     --accent-5: #A8694A;   /* terracotta  */
 
     --text:  var(--ink-soft);
