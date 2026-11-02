@@ -79,7 +79,7 @@
       <nav class="nav__links" id="navLinks" aria-label="Primary">
         <a href="#expertise">Expertise</a>
         <a href="#closing">About</a>
-        <a href="#contact">Contact</a>
+        <a class="nav__contact" href="#contact">Get in touch</a>
       </nav>
       <div class="nav__cta">
         <a class="nav__blog" href="blog/">Blog</a>
@@ -122,10 +122,9 @@
           </p>
           <div class="hero__actions">
             <a class="btn btn--clay" href="#expertise">View expertise <span class="arrow">→</span></a>
-            <a class="btn btn--ghost" href="#contact">Contact</a>
+            <a class="btn btn--ghost" href="#contact">Get in touch</a>
           </div>
           <div class="hero__meta">
-            <span><span class="dot"></span> San Diego, California</span>
             <span><span class="dot"></span> AI | Physics-Informed AI | Cloud | Scientific Computing | HPC</span>
             
           </div>
@@ -136,13 +135,13 @@
       <div class="wrap">
         <div class="affil">
           <div class="affil__inner">
-            <p class="affil__line">“From equations to architecture to shipped products.”</p>
+            <p class="affil__line">From equations to architecture to shipped products.</p>
             <div class="affil__logos" aria-label="Affiliations">
               <span>Audivi AI</span>
               <span>E-Signal</span>
               <span>DiPhyx</span>
               <span>Merck &amp; Co.</span>
-              <span>Inst. for Clean &amp; Secure Energy</span>
+              <span>Institute for Clean &amp; Secure Energy</span>
               <span>University of Utah</span>
             </div>
           </div>
@@ -164,9 +163,9 @@
               <h3>Artificial intelligence</h3>
             </div>
             <ul class="exp__list">
-              <li><strong>Real-time conversational AI.</strong> Architecture and priorities, as Head of Engineering at Audivi AI, for a product deployed at major fast-food chains. <a class="exp__go" href="https://audivi.ai/" target="_blank" rel="noopener">Audivi AI <span class="arrow">→</span></a></li>
+              <li><strong>Real-time conversational AI.</strong> As Head of Engineering at Audivi AI, I guide architecture and priorities for a product deployed at major fast-food chains. <a class="exp__go" href="https://audivi.ai/" target="_blank" rel="noopener">Visit Audivi AI <span class="arrow">→</span></a></li>
               <li><strong>ML and NLP in pharma.</strong> Pipelines for nonclinical drug safety at Merck, integrated with Databricks in a regulated setting.</li>
-              <li><strong>AI-assisted pipeline design.</strong> Across simulation, analytics, and data processing in the DiPhyx platform. <a class="exp__go" href="https://www.diphyx.com/" target="_blank" rel="noopener">DiPhyx <span class="arrow">→</span></a></li>
+              <li><strong>AI-assisted pipeline design.</strong> The DiPhyx platform uses AI to help design pipelines for simulation, analytics, and data processing. <a class="exp__go" href="https://www.diphyx.com/" target="_blank" rel="noopener">Visit DiPhyx <span class="arrow">→</span></a></li>
             </ul>
           </article>
 
@@ -175,8 +174,8 @@
               <h3>Physics-informed AI</h3>
             </div>
             <ul class="exp__list">
-              <li><strong>Neural operators for turbulence.</strong> Fourier neural operators trained on One-Dimensional Turbulence, testing what a surrogate of a stochastic simulation should learn. <a class="exp__go" href="/AI-ODT/Scenarios/blog.html">Read the study <span class="arrow">→</span></a></li>
-              <li><strong>Digital twin for power plants.</strong> I architected and developed the digital twin behind E-Signal’s CondenserSentinel. Physics-based models run on data plants already collect, flagging efficiency drift and ranking likely causes such as air in-leakage or tube fouling. <a class="exp__go" href="https://e-signal.ai/" target="_blank" rel="noopener">E-Signal <span class="arrow">→</span></a></li>
+              <li><strong>Neural operators for turbulence.</strong> Fourier neural operators trained on One-Dimensional Turbulence, testing what a surrogate of a stochastic simulation should learn. <a class="exp__go" href="/AI-ODT/Scenarios/blog.html">Read the ODT study <span class="arrow">→</span></a></li>
+              <li><strong>Digital twin for power plants.</strong> I architected and developed the digital twin behind E-Signal’s CondenserSentinel. Physics-based models run on data plants already collect, flagging efficiency drift and ranking likely causes such as air in-leakage or tube fouling. <a class="exp__go" href="https://e-signal.ai/" target="_blank" rel="noopener">Visit E-Signal <span class="arrow">→</span></a></li>
             </ul>
           </article>
 
@@ -185,8 +184,8 @@
               <h3>Cloud</h3>
             </div>
             <ul class="exp__list">
-              <li><strong>Multi-cloud scientific platform.</strong> DiPhyx designs, runs, and monitors pipelines across AWS, Azure, GCP, and on-prem HPC, catching failures early. <a class="exp__go" href="https://www.diphyx.com/" target="_blank" rel="noopener">DiPhyx <span class="arrow">→</span></a></li>
-              <li><strong>Workflow engine.</strong> dxflow turns accessible machines into one computational fleet, with a CLI, REST API, web UI, and built-in authentication and authorization. <a class="exp__go" href="https://dxflow.ai/" target="_blank" rel="noopener">dxflow <span class="arrow">→</span></a></li>
+              <li><strong>Multi-cloud scientific platform.</strong> DiPhyx designs, runs, and monitors pipelines across AWS, Azure, GCP, and on-prem HPC, catching failures early. <a class="exp__go" href="https://www.diphyx.com/" target="_blank" rel="noopener">Visit DiPhyx <span class="arrow">→</span></a></li>
+              <li><strong>Workflow engine.</strong> dxflow turns accessible machines into one computational fleet, with a CLI, REST API, web UI, and built-in authentication and authorization. <a class="exp__go" href="https://dxflow.ai/" target="_blank" rel="noopener">Visit dxflow <span class="arrow">→</span></a></li>
               <li><strong>Cloud-enabled simulation.</strong> GPU- and cloud-enabled workflows for multiphysics codes at the Institute for Clean and Secure Energy.</li>
             </ul>
           </article>
@@ -195,14 +194,14 @@
             <div class="exp__head">
               <h3>Scientific computing</h3>
             <video class="exp__video" autoplay muted loop playsinline preload="metadata"
-                   aria-label="Temperature field simulation">
+                   aria-label="Simulated temperature field in a combustion chamber">
               <source src="assets/temperature-hero.mp4" type="video/mp4" />
             </video>
             </div>
             <ul class="exp__list">
-              <li><strong>Two-phase ODT.</strong> My doctoral model at the University of Utah, with an interactive walkthrough of how it cuts computational cost. <a class="exp__go" href="projects/odt/">Explore the model <span class="arrow">→</span></a></li>
-              <li><strong>Combustion and turbulence research.</strong> Peer-reviewed work in CFD and thermochemistry, in journals such as <em>Combustion and Flame</em>. <a class="exp__go" href="https://scholar.google.com/citations?user=orPxOuMAAAAJ&hl=en" target="_blank" rel="noopener">Google Scholar <span class="arrow">→</span></a></li>
-              <li><strong>Radiation modeling.</strong> The principles and methods, explained with a teapot and a dragon. <a class="exp__go" href="blog/radiation-modeling/">Read the post <span class="arrow">→</span></a></li>
+              <li><strong>Two-Phase One-Dimensional Turbulence (ODT).</strong> My doctoral model at the University of Utah, with an interactive walkthrough of how it cuts computational cost. <a class="exp__go" href="projects/odt/">Explore the ODT model <span class="arrow">→</span></a></li>
+              <li><strong>Combustion and turbulence research.</strong> Peer-reviewed work in CFD and thermochemistry, in journals such as <em>Combustion and Flame</em>. <a class="exp__go" href="https://scholar.google.com/citations?user=orPxOuMAAAAJ&hl=en" target="_blank" rel="noopener">See publications on Google Scholar <span class="arrow">→</span></a></li>
+              <li><strong>Radiation modeling.</strong> The principles and methods, explained with a teapot and a dragon. <a class="exp__go" href="blog/radiation-modeling/">Read the radiation post <span class="arrow">→</span></a></li>
             </ul>
           </article>
 
@@ -211,9 +210,9 @@
               <h3>High-performance computing</h3>
             </div>
             <ul class="exp__list">
-              <li><strong>GPU acceleration.</strong> Particle–cell coupling in a multiphysics CFD code, made cheaper with a better algorithm and then a move to the GPU. <a class="exp__go" href="blog/particle-cell-operation-gpu/">Read the post <span class="arrow">→</span></a></li>
+              <li><strong>GPU acceleration.</strong> Cut the cost of particle–cell coupling in a multiphysics CFD code, first with a better algorithm, then by moving it to the GPU. <a class="exp__go" href="blog/particle-cell-operation-gpu/">Read the GPU post <span class="arrow">→</span></a></li>
               <li><strong>Large-scale multiphysics.</strong> Built and optimized simulation codes at the Institute for Clean and Secure Energy, with major performance gains.</li>
-              <li><strong>Cluster orchestration.</strong> Docker and Slurm driven from one engine in dxflow. <a class="exp__go" href="https://dxflow.ai/docs" target="_blank" rel="noopener">Read the docs <span class="arrow">→</span></a></li>
+              <li><strong>Cluster orchestration.</strong> dxflow runs Docker and Slurm workloads from one engine. <a class="exp__go" href="https://dxflow.ai/docs" target="_blank" rel="noopener">Read the dxflow docs <span class="arrow">→</span></a></li>
             </ul>
           </article>
 
@@ -224,6 +223,7 @@
     <!-- ======================================================= CLOSING -->
     <section id="closing" class="closing">
       <div class="wrap">
+        <div class="section__head reveal"><h2>About</h2></div>
         <div class="closing__grid reveal">
           <div>
             <h3>Scientist</h3>
@@ -244,15 +244,15 @@
     <!-- ======================================================= CONTACT -->
     <section id="contact" class="contact">
       <div class="wrap">
-        <p class="eyebrow reveal" style="text-align:center">Let’s talk</p>
-        <p class="contact__sent" id="contactSent" hidden>Message sent — I’ll reply to your email.</p>
+        <h2 class="reveal">Get in touch</h2>
+        <p class="contact__sent" id="contactSent" hidden>Message sent. I’ll reply to the email address you gave.</p>
         <form class="contact__form reveal" action="https://formsubmit.co/b.goshayeshi@gmail.com" method="POST">
           <input type="hidden" name="_subject" value="New message from bgoshayeshi.com" />
           <input type="hidden" name="_next" value="https://bgoshayeshi.com/?sent=1#contact" />
           <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" />
-          <input type="text" name="name" placeholder="Name" aria-label="Name" required />
-          <input type="email" name="email" placeholder="Email address" aria-label="Email address" required />
-          <textarea name="message" rows="5" placeholder="Message" aria-label="Message" required></textarea>
+          <label>Name <input type="text" name="name" autocomplete="name" required /></label>
+          <label>Email address <input type="email" name="email" autocomplete="email" required /></label>
+          <label>Message <textarea name="message" rows="5" required></textarea></label>
           <button class="btn btn--clay" type="submit">Send message <span class="arrow">→</span></button>
         </form>
         <div class="contact__actions reveal">

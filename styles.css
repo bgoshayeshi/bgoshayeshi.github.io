@@ -120,6 +120,7 @@ p, li { text-wrap: pretty; }
 .nav__links { display: flex; align-items: center; gap: 28px; }
 .nav__links a { font-size: 15px; color: var(--ink); transition: color .2s ease; }
 .nav__links a:hover { color: var(--clay-deep); }
+.nav__links a.nav__contact { display: none; } /* desktop uses the Get in touch button */
 .nav__cta { display: flex; align-items: center; gap: 14px; }
 .nav__blog {
   font-size: 15px; font-weight: 500;
@@ -187,6 +188,11 @@ p, li { text-wrap: pretty; }
 .affil__line { font-family: var(--serif); font-style: italic; font-size: 18px; color: var(--ink-soft); max-width: 40ch; }
 .affil__logos { display: flex; gap: 26px; flex-wrap: wrap; color: var(--muted); font-size: 14px; font-weight: 500; }
 .affil__logos span { white-space: nowrap; }
+@media (min-width: 1200px) {
+  .affil__inner { flex-wrap: nowrap; gap: 24px; }
+  .affil__line { font-size: 17px; max-width: none; white-space: nowrap; }
+  .affil__logos { flex-wrap: nowrap; gap: 20px; }
+}
 
 /* --------------------------------------------------------------- sections */
 section { padding: 84px 0; }
@@ -363,6 +369,7 @@ section { padding: 84px 0; }
 .contact__actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
 .contact__sent { font-size: 16px; font-weight: 500; color: var(--ink); max-width: 560px; margin: 0 auto 18px; }
 .contact__form { max-width: 560px; margin: 0 auto 30px; display: grid; gap: 12px; text-align: left; }
+.contact__form label { display: grid; gap: 6px; font-size: 14px; font-weight: 500; color: var(--ink); }
 .contact__form input, .contact__form textarea {
   width: 100%; font: inherit; font-size: 15.5px; color: var(--ink);
   background: #fff; border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
@@ -419,6 +426,7 @@ section { padding: 84px 0; }
     background: var(--paper); border-bottom: 1px solid var(--line); padding: 8px 24px 18px;
   }
   .nav.open .nav__links a { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .nav.open .nav__links a.nav__contact { display: block; }
   .projects { grid-template-columns: 1fr; }
   .ventures__intro { flex-direction: column; align-items: flex-start; gap: 24px; }
   .ventures__logo { height: 84px; }
