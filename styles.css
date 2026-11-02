@@ -288,7 +288,8 @@ section { padding: 84px 0; }
 .pcard__live { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 7px; }
 .pcard h3 { font-size: 22px; margin: 0 0 10px; }
 .pcard p { margin: 0 0 18px; color: var(--ink-soft); font-size: 15.5px; flex: 1; }
-.pcard__foot { display: flex; align-items: center; justify-content: space-between; }
+.pcard__foot { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.pcard__go--cta { white-space: nowrap; }
 .pcard__focus { font-size: 13px; color: var(--muted); }
 .pcard__go { font-size: 14px; font-weight: 500; color: var(--ink); display: inline-flex; gap: 6px; align-items: center; }
 .pcard__go .arrow { transition: transform .2s ease; }
@@ -325,6 +326,26 @@ section { padding: 84px 0; }
 .cap h3 { font-family: var(--sans); font-weight: 600; font-size: 16px; margin: 0 0 10px; }
 .cap .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { font-size: 13px; color: var(--ink-soft); background: var(--paper-2); border-radius: 999px; padding: 5px 12px; }
+
+/* expertise: one row per discipline, with work as the examples */
+.exp { display: grid; grid-template-columns: 5fr 7fr; gap: 48px; padding: 44px 0; border-top: 1px solid var(--line-strong); }
+.exp__head h3 { font-size: clamp(24px, 2.6vw, 30px); margin: 0 0 12px; }
+.exp__video { display: block; width: 100%; max-width: 360px; margin-top: 22px; border-radius: var(--radius-sm); background: #000; }
+.exp__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; align-content: start; }
+.exp__list li { font-size: 16px; color: var(--ink-soft); }
+.exp__list strong { color: var(--ink); font-weight: 600; }
+.exp__go { font-size: 14px; font-weight: 500; color: var(--clay-deep); white-space: nowrap; }
+.exp__go:hover { color: var(--ink); }
+
+/* closing statement */
+.closing { background: var(--card); }
+.closing__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+.closing__grid h3 { font-size: 22px; margin: 0 0 10px; }
+.closing__grid p { font-size: 16px; color: var(--ink-soft); margin: 0; }
+@media (max-width: 760px) {
+  .exp { grid-template-columns: 1fr; gap: 22px; padding: 34px 0; }
+  .closing__grid { grid-template-columns: 1fr; gap: 26px; }
+}
 
 /* publications */
 .pubs { background: var(--paper-2); }
